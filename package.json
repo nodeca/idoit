@@ -1,0 +1,36 @@
+{
+  "name": "ido",
+  "version": "0.1.0",
+  "description": "Featured embeddable tasks queue, backed with redis.",
+  "keywords": [
+    "task",
+    "job",
+    "queue",
+    "task queue",
+    "job queue"
+  ],
+  "repository": "nodeca/ido",
+  "license": "MIT",
+  "files": [
+    "index.js",
+    "lib/"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "test": "npm run lint && mocha",
+    "coverage": "rm -rf coverage && istanbul cover _mocha",
+    "report-coveralls": "istanbul cover _mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "cron": "^1.1.0",
+    "redis": "^2.6.2",
+    "serialize-error": "^2.0.0"
+  },
+  "devDependencies": {
+    "coveralls": "^2.11.14",
+    "eslint": "^3.6.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.0.2"
+  }
+}
