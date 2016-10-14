@@ -169,4 +169,22 @@ describe('group', function () {
     assert.equal(task.state, 'finished');
     assert.ok(task.error.message.includes('Group error: terminating task because children deleted'));
   }));
+
+
+  it('should run user init', bb.coroutine(function* () {
+    let calls = 0;
+
+    q.registerTask('t1', () => {});
+
+    q.registerTask({
+      name: 't2',
+      baseClass: Queue.GroupTemplate,
+      init: () => { calls++; }
+    });
+
+    let id = yield q.t2([ q.t1() ]).run();
+    yield q.wait(id);
+
+    assert.equal(calls, 1);
+  }));
 });

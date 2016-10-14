@@ -185,4 +185,21 @@ describe('chain', function () {
     );
   });
 
+
+  it('should run user init', bb.coroutine(function* () {
+    let calls = 0;
+
+    q.registerTask('t1', () => {});
+
+    q.registerTask({
+      name: 't2',
+      baseClass: Queue.ChainTemplate,
+      init: () => { calls++; }
+    });
+
+    let id = yield q.t2([ q.t1() ]).run();
+    yield q.wait(id);
+
+    assert.equal(calls, 1);
+  }));
 });
