@@ -290,13 +290,13 @@ describe('task', function () {
     q.registerTask({
       name: 't1',
       process() {
-        assert.equal(this.id, 'test_id');
+        assert.equal(this.id, 'test_id_x_y_z');
         done();
       },
-      taskID: () => 'test_id'
+      taskID: (a, b, c) => `test_id_${a}_${b}_${c}`
     });
 
-    q.t1().run();
+    q.t1('x', 'y', 'z').run();
   });
 
 
