@@ -277,7 +277,7 @@ queue.registerTask({
 });
 
 // run iterator
-queue.lazy_mapper(initialState).run();
+queue.lazy_mapper().run();
 ```
 
 Why this crazy magic was invented?

@@ -65,7 +65,7 @@ describe('iterator', function () {
     q.registerTask({
       name: 't3',
       baseClass: Queue.IteratorTemplate,
-      iterate(i) {
+      iterate(i = 0) {
         if (i === 0) {
           return Promise.resolve({
             state: 1,
@@ -82,7 +82,7 @@ describe('iterator', function () {
       }
     });
 
-    q.t3(0).run();
+    q.t3().run();
   });
 
 
@@ -101,7 +101,7 @@ describe('iterator', function () {
     q.registerTask({
       name: 't3',
       baseClass: Queue.IteratorTemplate,
-      iterate(i) {
+      iterate(i = 0) {
         if (i === 0) {
           return Promise.resolve({
             state: 1,
@@ -119,7 +119,7 @@ describe('iterator', function () {
       init() { this.total = 2; }
     });
 
-    id = q.t3(0).run();
+    id = q.t3().run();
   });
 
 
@@ -131,7 +131,7 @@ describe('iterator', function () {
     q.registerTask({
       name: 't3',
       baseClass: Queue.IteratorTemplate,
-      iterate(i) {
+      iterate(i = 0) {
         if (i === 0) {
           return Promise.resolve({
             state: 1,
@@ -146,7 +146,7 @@ describe('iterator', function () {
     q.chain([
       q.t1(),
       q.t1(),
-      q.t3(0),
+      q.t3(),
       q.t2()
     ]).run();
   });
@@ -169,7 +169,7 @@ describe('iterator', function () {
     q.registerTask({
       name: 't3',
       baseClass: Queue.IteratorTemplate,
-      iterate(i) {
+      iterate(i = 0) {
         switch (i++) {
           case 0: return { state: i, tasks: [ q.t1() ] };
           case 1: return { state: i, tasks: [ q.t1() ] };
@@ -181,7 +181,7 @@ describe('iterator', function () {
       }
     });
 
-    let id = yield q.t3(0).run();
+    let id = yield q.t3().run();
     let task = yield q.wait(id);
 
     assert.equal(t1Calls, 2);
@@ -208,7 +208,7 @@ describe('iterator', function () {
     q.registerTask({
       name: 'iter',
       baseClass: Queue.IteratorTemplate,
-      iterate(i) {
+      iterate(i = 0) {
         if (i === 5) {
           return Promise.resolve({
             state: i++,
@@ -223,7 +223,7 @@ describe('iterator', function () {
       }
     });
 
-    let id = yield q.iter(0).run();
+    let id = yield q.iter().run();
     let task = yield q.wait(id);
 
     assert.ok(task.error.message.includes('Iterator error: terminating task because bad "iterate" result'));
@@ -242,7 +242,7 @@ describe('iterator', function () {
     q.registerTask({
       name: 't3',
       baseClass: Queue.IteratorTemplate,
-      iterate(i) {
+      iterate(i = 0) {
         switch (i++) {
           case 0: return { state: i, tasks: [ q.t1() ] };
           case 1:
@@ -253,7 +253,7 @@ describe('iterator', function () {
       }
     });
 
-    id = yield q.t3(0).run();
+    id = yield q.t3().run();
 
     yield q.wait(id);
 
@@ -262,5 +262,86 @@ describe('iterator', function () {
     }
 
     assert.equal(t3Calls, 0);
+  }));
+
+
+  it('should handle error in a nested iterator', bb.coroutine(function* () {
+    q.removeAllListeners('error');
+    // replace existing error throw with filtered one
+    q.on('error', err => { if (!/Iterator error/.test(String(err))) throw err; });
+
+    q.registerTask({
+      name: 't1',
+      baseClass: Queue.IteratorTemplate,
+      iterate() {
+        return Promise.resolve(null);
+      }
+    });
+
+    q.registerTask({
+      name: 't2',
+      baseClass: Queue.IteratorTemplate,
+      iterate(i) {
+        // bad iterate result: state not changed
+        return Promise.resolve({ state: i });
+      }
+    });
+
+    q.registerTask({
+      name: 't3',
+      baseClass: Queue.IteratorTemplate,
+      iterate(i = 0) {
+        return i === 0 ? { state: i + 1, tasks: [ q.t1(), q.t2() ] } : null;
+      }
+    });
+
+    let id = yield q.t3().run();
+    let task = yield q.wait(id);
+
+    assert.ok(task.error.message.includes('Iterator error'));
+  }));
+
+
+  it('should support idling', bb.coroutine(function* () {
+    let iteratorCalls = 0;
+
+    q.registerTask('t1', () => {});
+
+    q.registerTask({
+      name: 't2',
+      baseClass: Queue.IteratorTemplate,
+      iterate(i = 0) {
+        if (i === 0) {
+          return Promise.resolve({ state: i + 1, tasks: [ q.t1(), q.t1(), q.t1() ] });
+        }
+
+        if (iteratorCalls++ < 2) {
+          return Promise.resolve({});
+        }
+
+        return Promise.resolve(null);
+      }
+    });
+
+    yield q.wait(yield q.t2().run());
+  }));
+
+
+  it('should allow iterator to end before child tasks', bb.coroutine(function* () {
+    q.registerTask('t1', arg => delay(arg));
+
+    q.registerTask({
+      name: 't2',
+      baseClass: Queue.IteratorTemplate,
+      iterate(i = 0) {
+        if (i === 0) {
+          return Promise.resolve({ state: i + 1, tasks: [ q.t1(20), q.t1(40) ] });
+        }
+
+        return Promise.resolve(null);
+      }
+    });
+
+    yield q.wait(yield q.t2().run());
   }));
 });

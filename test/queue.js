@@ -372,4 +372,20 @@ describe('queue', function () {
     assert.equal(second.state, 'finished');
     assert.equal(second.error.code, 'CANCELED');
   }));
+
+
+  it('should re-emit redis errors', bb.coroutine(function* () {
+    q.removeAllListeners('error');
+
+    let p = new Promise(resolve => {
+      q.once('error', err => {
+        assert.equal(err, 'redis error');
+        resolve();
+      });
+    });
+
+    q.__redis__.emit('error', 'redis error');
+
+    yield p;
+  }));
 });
