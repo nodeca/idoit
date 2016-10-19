@@ -327,7 +327,7 @@ describe('queue', function () {
       }
     });
 
-    q.__concurrency__ = 1;
+    q.options({ concurrency: 1 });
 
     let id = yield q.group([ q.t(), q.t(), q.t(), q.t() ]).run();
 

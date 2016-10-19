@@ -157,6 +157,11 @@ Return `Promise`, resolved when queue is ready to operate (after 'connect'
 event, see below).
 
 
+### .options(opts)
+
+Update constructor options, except redisURL.
+
+
 ### .on('eventName', handler)
 
 `ido` is an `EventEmitter` instance that fires some events:
