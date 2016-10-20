@@ -169,6 +169,9 @@ Update constructor options, except redisURL.
 - `ready` when redis connection is up and commands can be executed
   (tasks can be registered without connection)
 - `error` when an error has occured.
+- `task:progress`, `task:progress:<task_id>` - when task update progress.
+  Event data is: { id, uid, total, progress }
+- `task:end`, `task:end:<task_id>` - when task end. Event data is: { id, uid }
 
 
 ### .\<taskName\>(data)

@@ -243,13 +243,13 @@ describe('task', function () {
 
 
   it('should cancel', bb.coroutine(function* () {
-    q.registerTask('t1', () => {});
+    q.registerTask('t1', () => delay(1000000));
 
     let id = yield q.t1().run();
 
     yield q.cancel(id);
 
-    let task = yield q.getTask(id);
+    let task = yield q.wait(id);
 
     assert.equal(task.state, 'finished');
   }));

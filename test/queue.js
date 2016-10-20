@@ -388,4 +388,128 @@ describe('queue', function () {
 
     yield p;
   }));
+
+
+  it('should emit "task:end" event', function (done) {
+    q.registerTask('t', () => {});
+
+    let t = q.t();
+
+    q.on('task:end', data => {
+      assert.equal(data.id, t.id);
+      assert.equal(data.uid, t.uid);
+      done();
+    });
+
+    t.run();
+  });
+
+
+  it('should emit "task:end:<task_id>" event', function (done) {
+    q2.shutdown();
+
+    q.registerTask('t', () => {});
+
+    let calls = 0;
+    let t = q.t();
+
+    q.registerTask({ name: 'i',  baseClass: Queue.IteratorTemplate, iterate(i = 0) {
+      if (i === 0) return Promise.resolve({ state: 1, tasks: [ t ] });
+      return Promise.resolve(null);
+    } });
+
+    let i = q.i();
+    let g = q.group([ i ]);
+    let c = q.chain([ g ]);
+
+    bb.all([ t, i, g, c ]).then(() => {
+      q.on(`task:end:${t.id}`, data => {
+        calls++;
+        assert.equal(data.id, t.id);
+        assert.equal(data.uid, t.uid);
+      });
+
+      q.on(`task:end:${i.id}`, data => {
+        calls++;
+        assert.equal(data.id, i.id);
+        assert.equal(data.uid, i.uid);
+      });
+
+      q.on(`task:end:${g.id}`, data => {
+        calls++;
+        assert.equal(data.id, g.id);
+        assert.equal(data.uid, g.uid);
+      });
+
+      q.on(`task:end:${c.id}`, data => {
+        calls++;
+        assert.equal(calls, 4);
+        assert.equal(data.id, c.id);
+        assert.equal(data.uid, c.uid);
+        done();
+      });
+
+      c.run();
+    });
+  });
+
+
+  it('`.cancel()` should emit "task:end" event', bb.coroutine(function* () {
+    q.registerTask('t1', () => delay(10000000));
+    q.registerTask('t2', () => {});
+
+    let t1 = q.t1();
+    let t2 = q.t2();
+    let t1id = yield t1.run();
+    let t2id = yield t2.run();
+
+    let t1EndCalls = 0;
+    let t2EndCalls = 0;
+
+    q.on(`task:end:${t1id}`, data => {
+      t1EndCalls++;
+      assert.equal(data.id, t1id);
+      assert.equal(data.uid, t1.uid);
+    });
+
+    q.on(`task:end:${t2id}`, data => {
+      t2EndCalls++;
+      assert.equal(data.id, t2id);
+      assert.equal(data.uid, t2.uid);
+    });
+
+    yield q.wait(t2id);
+
+    assert.equal(t1EndCalls, 0);
+    assert.equal(t2EndCalls, 1);
+
+    yield q.cancel(t1id);
+    yield q.cancel(t2id);
+
+    assert.equal(t1EndCalls, 1);
+    assert.equal(t2EndCalls, 1);
+  }));
+
+
+  it('should emit "task:progress:<task_id>" event', function (done) {
+    q2.shutdown();
+
+    q.registerTask('t', () => {});
+
+    let c = q.chain([ q.t(), q.t(), q.t(), q.t() ]);
+
+    c.run().then(id => {
+      let calls = 0;
+
+      q.on(`task:progress:${id}`, data => {
+        calls++;
+        assert.equal(data.progress, calls);
+        assert.equal(data.total, 4);
+        assert.equal(data.id, id);
+        assert.equal(data.uid, c.uid);
+
+        if (calls === 4) done();
+      });
+    });
+  });
 });
