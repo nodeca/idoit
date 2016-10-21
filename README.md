@@ -174,15 +174,21 @@ Update constructor options, except redisURL.
 - `task:end`, `task:end:<task_id>` - when task end. Event data is: { id, uid }
 
 
-### .\<taskName\>(data)
+### .\<taskName\>(...params)
 
-Create new Task.
+Create new Task with optional params.
 
-- **data** (Object) - optional, the task params
+
+### task.options({ ... })
+
+Override task properties. For example, you may wish to assign specific
+group/chain tasks to another pool.
+
 
 ### task.run()
 
 Run task immediately. Returns a Promise resolved with task id.
+
 
 ### task.postpone([delay])
 
