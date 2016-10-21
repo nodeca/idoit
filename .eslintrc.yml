@@ -4,7 +4,8 @@ env:
   es6:      true
 
 rules:
-  accessor-pairs:         2
+  # ?
+  accessor-pairs:         0
   array-bracket-spacing:  [ 2, "always", { "singleValue": true, "objectsInArrays": true, "arraysInArrays": true } ]
   block-scoped-var:       2
   block-spacing:          2
