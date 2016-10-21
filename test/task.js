@@ -393,15 +393,7 @@ describe('task', function () {
     IncompleteGroup.extend = function (options) {
       class T extends IncompleteGroup {}
 
-      [
-        'init',
-        'name',
-        'taskID'
-      ].forEach(k => {
-        if (options.hasOwnProperty(k)) {
-          T.prototype[k] = options[k];
-        }
-      });
+      Object.assign(T.prototype, options);
 
       return T;
     };
