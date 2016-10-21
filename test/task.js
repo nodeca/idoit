@@ -394,6 +394,7 @@ describe('task', function () {
       class T extends IncompleteGroup {}
 
       [
+        'init',
         'name',
         'taskID'
       ].forEach(k => {
@@ -401,10 +402,6 @@ describe('task', function () {
           T.prototype[k] = options[k];
         }
       });
-
-      if (options.hasOwnProperty('init')) {
-        T.prototype.__user_init__ = options.init;
-      }
 
       return T;
     };
