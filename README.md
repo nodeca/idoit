@@ -141,7 +141,7 @@ __Note.__ You can cancel only tasks without parent.
 Start worker and begin task data consume. Return `Promise`, resolved when queue
 is ready (call `.ready()` inside).
 
-If `poolName` was specified in cunstructor, only tasks routed to this pull will
+If `pool` was specified in cunstructor, only tasks routed to this pull will
 be consumed.
 
 

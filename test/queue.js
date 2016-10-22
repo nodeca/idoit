@@ -90,7 +90,7 @@ describe('queue', function () {
 
     let task = q.t1();
 
-    for (let i = 0; i < 100000; i++) {
+    for (let i = 0; i < 1000; i++) {
       task = q.chain([ task ]);
     }
 
@@ -198,17 +198,19 @@ describe('queue', function () {
         name: 't1',
         process() {
           calls++;
-          assert.equal(q.__pool_id__, this.pool_id);
+          assert.equal(this.pool, 'default');
+          assert.equal(q.__pool__, this.pool);
         },
-        poolName: 'default'
+        pool: 'default'
       },
       {
         name: 't2',
         process() {
           calls++;
-          assert.equal(q2.__pool_id__, this.pool_id);
+          assert.equal(this.pool, 'testPoolName');
+          assert.equal(q2.__pool__, this.pool);
         },
-        poolName: 'testPoolName'
+        pool: 'testPoolName'
       }
     ].forEach(t => {
       q.registerTask(t);
