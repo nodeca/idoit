@@ -30,7 +30,7 @@ describe('queue', function () {
     q_ns = `ido_test_${random(6)}:`;
 
     q  = new Queue({ redisURL: REDIS_URL, ns: q_ns });
-    q2 = new Queue({ redisURL: REDIS_URL, ns: q_ns, name: 'testPoolName' });
+    q2 = new Queue({ redisURL: REDIS_URL, ns: q_ns, pool: 'testPoolName' });
 
     // Helper to wait task finish
     q.wait = q2.wait = bb.coroutine(function* (id) {
@@ -199,7 +199,7 @@ describe('queue', function () {
         process() {
           calls++;
           assert.equal(this.pool, 'default');
-          assert.equal(q.__pool__, this.pool);
+          assert.equal(q.pool, this.pool);
         },
         pool: 'default'
       },
@@ -208,7 +208,7 @@ describe('queue', function () {
         process() {
           calls++;
           assert.equal(this.pool, 'testPoolName');
-          assert.equal(q2.__pool__, this.pool);
+          assert.equal(q2.pool, this.pool);
         },
         pool: 'testPoolName'
       }

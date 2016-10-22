@@ -75,15 +75,17 @@ API
  - **redisURL** (String) - redis connection url.
  - **concurrency** (Number) - max tasks to consume in parallel
    by single worker, 100 by default.
- - **name** (String) - worker (pool) name, "default" if not set. You
+ - **pool** (String) - worker pool name, "default" if not set. Used if
+   this queue instance consumes tasks only (after `.start()`). You
    can route tasks to specific pools of workers to avoid unwanted locks.
- - **ns** (String) - redis namespace (keys prefix), "idoqueue:" by default.
+ - **ns** (String) - data namespace, currently used as redis keys prefix,
+   "idoqueue:" by default.
 
 It's a good practice to have separate worker pools for heavy blocking tasks and
 non-blocking ones. For example, nobody should block sending urgent emails. So,
-create several worker processes, pin those to different pool and set proper
+create several worker processes, pin those to different pools and set proper
 tasks concurrency. Non-blocking tasks can be cunsumed in parallel, and you can
-be of wuth default `concurrency` = 100. Blocking tasks should be consumen
+be ok with default `concurrency` = 100. Blocking tasks should be consumed
 one-by-one, set `concurrency` = 1 for those workers.
 
 __Note.__ It may happen, that you remove some task types from your app. In this
