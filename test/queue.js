@@ -58,6 +58,14 @@ describe('queue', function () {
   }));
 
 
+  it('should set namespace', function () {
+    q.options({ ns: 'foo' });
+
+    assert.equal(q.__prefix__, 'foo');
+    assert.equal(q.ns, 'foo');
+  });
+
+
   it('should run chained groups', bb.coroutine(function* () {
     let calls = 0;
 
