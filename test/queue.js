@@ -227,6 +227,23 @@ describe('queue', function () {
   }));
 
 
+  it('should consume tasks from multiple puuls if set', bb.coroutine(function* () {
+    q.registerTask({ name: 't1', process() {} });
+    q.registerTask({ name: 't2', process() {} });
+
+    q.options({ pool: [ 'default', 'secondary' ] });
+
+    let id = yield q.group([
+      q.t1(),
+      q.t2().options({ pool: 'secondary' })
+    ]).run();
+
+    let task = yield q.wait(id);
+
+    assert.equal(task.state, 'finished');
+  }));
+
+
   it('cron should run task once per second', function (done) {
     let t1Calls = 0;
     let startTime = Date.now();

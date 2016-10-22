@@ -163,6 +163,21 @@ describe('group', function () {
     q.registerTask({ name: 't1', process() {}, removeDelay: 0 });
     q.registerTask('t2', () => delay(1000));
 
+    let id = yield q.group([ q.t1(), q.t2() ]).run();
+    let task = yield q.wait(id);
+
+    assert.equal(task.state, 'finished');
+    assert.ok(task.error.message.includes('Group error: terminating task because children deleted'));
+  }));
+
+
+  it('should pop error if children deleted', bb.coroutine(function* () {
+    q.removeAllListeners('error');
+    q.on('error', () => {});
+
+    q.registerTask({ name: 't1', process() {}, removeDelay: 0 });
+    q.registerTask('t2', () => delay(1000));
+
     let id = yield q.chain([ q.group([ q.t1(), q.t2() ]) ]).run();
     let task = yield q.wait(id);
 

@@ -78,6 +78,8 @@ API
  - **pool** (String) - worker pool name, "default" if not set. Used if
    this queue instance consumes tasks only (after `.start()`). You
    can route tasks to specific pools of workers to avoid unwanted locks.
+   You can set `pool` to Array, `[ 'pool1', 'pool2' ]` to consume tasks from
+   several pools (for development/testing purposes).
  - **ns** (String) - data namespace, currently used as redis keys prefix,
    "idoqueue:" by default.
 
