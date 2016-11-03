@@ -6,16 +6,12 @@ ido
 [![Coverage Status](https://coveralls.io/repos/github/nodeca/ido/badge.svg?branch=master)](https://coveralls.io/github/nodeca/ido?branch=master)
 
 
-> Featured embeddable tasks queue, backed with redis.
+> Redis-backed task queue engine with advanced task control and eventual consistency.
 
-Typical applying:
-
-- Decouple code execution.
+- Task grouping, chaining, iterators for huge ranges.
 - Postponed & scheduled task run.
-- Load distribution for heavy tasks.
-
-Implementation is simple (compared to standalone services), but enough for
-the most of projects. Advantage of this package is the ease of use.
+- Load distribution + worker pools.
+- Easy to embed.
 
 
 Features in details
@@ -114,7 +110,7 @@ Options:
  - **total** (Number) - optional, max progress value, default 1. If you don't
    modify behaviour progress starts with 0 and become 1 on task end.
  - **postponeDelay** (Number) - optional, if postpone is called without delay,
-   delay is assumed to be equal to this value (in milliseconds). 
+   delay is assumed to be equal to this value (in milliseconds).
  - **cron** (String) - optional, cron string ("15 */6 * * *"), default null.
  - **track** (Number) - default 3600000ms (1hr). Time to remember scheduled
    tasks from cron to avoid rerun if several servers in cluster have wrong
