@@ -1,5 +1,5 @@
 {
-  "name": "ido",
+  "name": "idoit",
   "version": "0.1.0",
   "description": "Featured embeddable tasks queue, backed with redis.",
   "keywords": [
@@ -9,7 +9,7 @@
     "task queue",
     "job queue"
   ],
-  "repository": "nodeca/ido",
+  "repository": "nodeca/idoit",
   "license": "MIT",
   "files": [
     "index.js",

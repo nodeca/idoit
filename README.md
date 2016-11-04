@@ -1,9 +1,9 @@
-ido
-===
+idoit
+=====
 
-[![Build Status](https://img.shields.io/travis/nodeca/ido/master.svg?style=flat)](https://travis-ci.org/nodeca/ido)
-[![NPM version](https://img.shields.io/npm/v/ido.svg?style=flat)](https://www.npmjs.org/package/ido)
-[![Coverage Status](https://coveralls.io/repos/github/nodeca/ido/badge.svg?branch=master)](https://coveralls.io/github/nodeca/ido?branch=master)
+[![Build Status](https://img.shields.io/travis/nodeca/idoit/master.svg?style=flat)](https://travis-ci.org/nodeca/idoit)
+[![NPM version](https://img.shields.io/npm/v/idoit.svg?style=flat)](https://www.npmjs.org/package/idoit)
+[![Coverage Status](https://coveralls.io/repos/github/nodeca/idoit/badge.svg?branch=master)](https://coveralls.io/github/nodeca/idoit?branch=master)
 
 
 > Redis-backed task queue engine with advanced task control and eventual consistency.
@@ -17,7 +17,7 @@ ido
 Features in details
 -------------------
 
-`ido` provides advanced control to implement so
+`idoit` provides advanced control to implement so
 
 **Grouping**. Special `group` task execute children tasks and wait until all
 complete. Useful for map/reduce logic.
@@ -59,14 +59,14 @@ Install
 `node.js` 6+ and `redis` 3.0+ required.
 
 ```sh
-npm install ido --save
+npm install idoit --save
 ```
 
 
 API
 ---
 
-### new Queue({ redisURL, concurrency = 100, name = 'default', ns = 'idoqueue:' })
+### new Queue({ redisURL, concurrency = 100, name = 'default', ns = 'idoit:' })
 
  - **redisURL** (String) - redis connection url.
  - **concurrency** (Number) - max tasks to consume in parallel
@@ -77,7 +77,7 @@ API
    You can set `pool` to Array, `[ 'pool1', 'pool2' ]` to consume tasks from
    several pools (for development/testing purposes).
  - **ns** (String) - data namespace, currently used as redis keys prefix,
-   "idoqueue:" by default.
+   "idoitqueue:" by default.
 
 It's a good practice to have separate worker pools for heavy blocking tasks and
 non-blocking ones. For example, nobody should block sending urgent emails. So,
@@ -164,7 +164,7 @@ Update constructor options, except redisURL.
 
 ### .on('eventName', handler)
 
-`ido` is an `EventEmitter` instance that fires some events:
+`idoit` is an `EventEmitter` instance that fires some events:
 
 - `ready` when redis connection is up and commands can be executed
   (tasks can be registered without connection)
@@ -323,7 +323,7 @@ Why one more queue?
 Of cause, we are familiar with [kue](https://github.com/Automattic/kue),
 [celery](http://www.celeryproject.org/) and [akka](http://akka.io/).
 Our target was have a balance between simplicity and power. So, we don't know
-if `ido` works well in cluster with thousands of instances. But it should be ok
+if `idoit` works well in cluster with thousands of instances. But it should be ok
 in smaller volumes and it's really easy to use.
 
 [kue](https://github.com/Automattic/kue) was not ok for our needs, because:
@@ -333,7 +333,7 @@ in smaller volumes and it's really easy to use.
 - no task grouping/chaining and so on
 - no strong guarantees of data consistency
 
-In `ido` we cared about:
+In `idoit` we cared about:
 
 - task group/chain operations & pass data between tasks (similar to celery)
 - worker pools to isolate task execution by types.
@@ -348,4 +348,4 @@ In `ido` we cared about:
 Redis still can be a point of failure, but that's acceptable price for
 simplicity. Of cause you can get a better availability via distributed message
 buses like RMQ. But in many cases it's more important to keep things simple.
-With `ido` you can reuse existing technologies without additional expences.
+With `idoit` you can reuse existing technologies without additional expences.

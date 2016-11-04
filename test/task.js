@@ -29,7 +29,7 @@ describe('task', function () {
   let q, q_ns;
 
   beforeEach(bb.coroutine(function* () {
-    q_ns = `ido_test_${random(6)}:`;
+    q_ns = `idoit_test_${random(6)}:`;
 
     q = new Queue({ redisURL: REDIS_URL, ns: q_ns });
 
@@ -306,7 +306,7 @@ describe('task', function () {
       q.registerTask({
         name: 't1'
       });
-    }, /ido error: "process" should be a function/);
+    }, /idoit error: "process" should be a function/);
   });
 
 

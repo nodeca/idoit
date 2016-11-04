@@ -27,7 +27,7 @@ describe('queue', function () {
   let q, q2, q_ns;
 
   beforeEach(bb.coroutine(function* () {
-    q_ns = `ido_test_${random(6)}:`;
+    q_ns = `idoit_test_${random(6)}:`;
 
     q  = new Queue({ redisURL: REDIS_URL, ns: q_ns });
     q2 = new Queue({ redisURL: REDIS_URL, ns: q_ns, pool: 'testPoolName' });
@@ -286,7 +286,7 @@ describe('queue', function () {
     try {
       yield q.cancel(children[0].id);
     } catch (err) {
-      assert.ok(err.message.indexOf('ido error: task with parent can not be cancelled') !== -1);
+      assert.ok(err.message.indexOf('idoit error: task with parent can not be cancelled') !== -1);
       return;
     }
 
@@ -298,7 +298,7 @@ describe('queue', function () {
     assert.throws(() => {
       /* eslint-disable no-new */
       new Queue();
-    }, /ido error: "redisURL" is required/);
+    }, /idoit error: "redisURL" is required/);
   });
 
 

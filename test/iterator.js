@@ -28,7 +28,7 @@ describe('iterator', function () {
   let q, q_ns;
 
   beforeEach(bb.coroutine(function* () {
-    q_ns = `ido_test_${random(6)}:`;
+    q_ns = `idoit_test_${random(6)}:`;
 
     q = new Queue({ redisURL: REDIS_URL, ns: q_ns });
 
@@ -195,7 +195,7 @@ describe('iterator', function () {
         name: 't1',
         baseClass: Queue.IteratorTemplate
       });
-    }, /ido error: "iterate" should be a function/);
+    }, /idoit error: "iterate" should be a function/);
   });
 
 

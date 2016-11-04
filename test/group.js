@@ -28,7 +28,7 @@ describe('group', function () {
   let q, q_ns;
 
   beforeEach(bb.coroutine(function* () {
-    q_ns = `ido_test_${random(6)}:`;
+    q_ns = `idoit_test_${random(6)}:`;
 
     q = new Queue({ redisURL: REDIS_URL, ns: q_ns });
 

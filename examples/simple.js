@@ -15,7 +15,7 @@ Promise.coroutine(function* () {
     if (err instanceof Queue.Error) {
       console.log(`Error in task "process" function: ${err}`);
     } else {
-      console.log(`Ido internal error: ${err}`);
+      console.log(`idoit internal error: ${err}`);
     }
   });
 

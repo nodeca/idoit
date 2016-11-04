@@ -23,18 +23,18 @@ combined with emit of additional command. See below.
 
 ## Redis content
 
-All keys starts with namespace prefix defined in constructor, "idoqueue:"
+All keys starts with namespace prefix defined in constructor, "idoit:"
 by default.
 
-- __idoqueue:waiting__                 (set)
-- __idoqueue:idle__                    (set)
-- __idoqueue:<pool>:startable__        (set)
-- __idoqueue:locked__                  (zset)
-- __idoqueue:restart__                 (zset)
-- __idoqueue:finished__                (zset)
-- __idoqueue:\<taskID\>__              (hash) - serialized tasks data
-- __idoqueue:<pool>:commands__         (zset) - internal transactions queue
-- __idoqueue:<pool>:commands_locked__  (zset)
+- __idoit:waiting__                 (set)
+- __idoit:idle__                    (set)
+- __idoit:<pool>:startable__        (set)
+- __idoit:locked__                  (zset)
+- __idoit:restart__                 (zset)
+- __idoit:finished__                (zset)
+- __idoit:\<taskID\>__              (hash) - serialized tasks data
+- __idoit:<pool>:commands__         (zset) - internal transactions queue
+- __idoit:<pool>:commands_locked__  (zset)
 
 
 ## Commands
