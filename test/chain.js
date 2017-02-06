@@ -202,4 +202,26 @@ describe('chain', function () {
 
     assert.equal(calls, 1);
   }));
+
+
+  it('`.cancel()` should emit "task:end" event for all unfinished tasks in chain', bb.coroutine(function* () {
+    q.registerTask({ name: 't1', taskID: () => 't1', process: () => {} });
+    q.registerTask({ name: 't2', taskID: () => 't2', process: () => delay(1000000) });
+    q.registerTask({ name: 't3', taskID: () => 't3', process: () => {} });
+
+    let id = yield q.chain([ q.t1(), q.t2(), q.t3() ]).run();
+
+    // wait for t1 to finish
+    yield new Promise(resolve => q.once('task:end:t1', resolve));
+
+    let finished_tasks = [];
+
+    q.on('task:end', function (task_info) {
+      finished_tasks.push(task_info.id);
+    });
+
+    yield q.cancel(id);
+
+    assert.deepEqual(finished_tasks, [ 't2', 't3', id ]);
+  }));
 });
