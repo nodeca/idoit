@@ -202,4 +202,28 @@ describe('group', function () {
 
     assert.equal(calls, 1);
   }));
+
+
+  it('should allow custom arguments for task with user init', bb.coroutine(function* () {
+    let t1_calls = 0;
+    let init_calls = 0;
+
+    q.registerTask('t1', () => { t1_calls++; });
+
+    q.registerTask({
+      name: 't2',
+      baseClass: Queue.GroupTemplate,
+      init() {
+        assert.deepEqual(this.args, [ 'foo', 'bar' ]);
+        this.__children_to_init__ = [ q.t1() ];
+        init_calls++;
+      }
+    });
+
+    let id = yield q.t2('foo', 'bar').run();
+    yield q.wait(id);
+
+    assert.equal(t1_calls, 1);
+    assert.equal(init_calls, 1);
+  }));
 });

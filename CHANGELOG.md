@@ -1,3 +1,10 @@
+1.0.2 / WIP
+------------------
+
+- Allow to pass arbitrary arguments to chain and group tasks,
+  expecting custom `init` function to set children in that case.
+
+
 1.0.1 / 2017-02-07
 ------------------
 
