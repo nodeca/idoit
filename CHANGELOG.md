@@ -1,8 +1,7 @@
-1.0.2 / WIP
+1.1.0 / 2017-02-27
 ------------------
 
-- Allow to pass arbitrary arguments to chain and group tasks,
-  expecting custom `init` function to set children in that case.
+- Simplify extending group/chain task via `.init()` method override.
 
 
 1.0.1 / 2017-02-07
