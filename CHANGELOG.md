@@ -1,3 +1,10 @@
+1.1.1 / 2017-03-03
+------------------
+
+- Quick-fix to suppress events from iterator's children when
+  parent was canceled.
+
+
 1.1.0 / 2017-02-27
 ------------------
 
