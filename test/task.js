@@ -310,6 +310,58 @@ describe('task', function () {
   });
 
 
+  it('should emit task errors', bb.coroutine(function* () {
+    let errors_catched = 0;
+
+    q.removeAllListeners('error');
+    // replace existing error throw with filtered one
+    q.on('error', err => {
+      if (String(err).includes('<!test err!>')) errors_catched++;
+      else throw err;
+    });
+
+    q.registerTask({
+      name: 't1',
+      process() {
+        return Promise.reject(new Error('<!test err!>'));
+      },
+      retry: 0
+    });
+
+    let id = yield q.t1().run();
+    let task = yield q.wait(id);
+
+    assert.equal(errors_catched, 1);
+    assert.ok(task.error.message.includes('<!test err!>'));
+  }));
+
+
+  it('should not emit errors from canceled tasks', bb.coroutine(function* () {
+    let errors_catched = 0;
+
+    q.removeAllListeners('error');
+    // replace existing error throw with filtered one
+    q.on('error', err => {
+      if (String(err).includes('<!test err!>')) errors_catched++;
+      else throw err;
+    });
+
+    q.registerTask({
+      name: 't1',
+      process() {
+        return q.cancel(this.id).then(() => { throw new Error('<!test err!>'); });
+      },
+      retry: 0
+    });
+
+    let id = yield q.t1().run();
+    let task = yield q.wait(id);
+
+    assert.equal(errors_catched, 0);
+    assert.equal(task.error.code, 'CANCELED');
+  }));
+
+
   it('should propagate errors', bb.coroutine(function* () {
     q.removeAllListeners('error');
     // replace existing error throw with filtered one
