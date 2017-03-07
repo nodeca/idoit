@@ -539,4 +539,67 @@ describe('queue', function () {
       });
     });
   });
+
+
+  describe('transaction', function () {
+    // TODO: tests for validate are missing
+
+    it('should execute redis commands', bb.coroutine(function* () {
+      let a = 'key:' + random(6), b = 'value:' + random(6);
+
+      yield q.__redis__.evalAsync(
+        q.__scripts__.transaction,
+        1,
+        JSON.stringify({
+          validate: [],
+          exec: [
+            [ 'set', a, b ]
+          ]
+        })
+      );
+
+      assert.equal(yield q.__redis__.getAsync(a), b);
+    }));
+
+
+    it('should evaluate scripts by sha', bb.coroutine(function* () {
+      let a = 'key:' + random(6), b = 'value:' + random(6);
+
+      let script = "redis.call('set', KEYS[1], ARGV[1])";
+      let sha = yield q.__redis__.scriptAsync('load', script);
+
+      yield q.__redis__.evalAsync(
+        q.__scripts__.transaction,
+        1,
+        JSON.stringify({
+          validate: [],
+          exec: [
+            [ 'evalsha', sha, 1, a, b ]
+          ]
+        })
+      );
+
+      assert.equal(yield q.__redis__.getAsync(a), b);
+    }));
+
+
+    it('should evaluate scripts by text', bb.coroutine(function* () {
+      let a = 'key:' + random(6), b = 'value:' + random(6);
+
+      let script = "redis.call('set', KEYS[1], ARGV[1])";
+
+      yield q.__redis__.evalAsync(
+        q.__scripts__.transaction,
+        1,
+        JSON.stringify({
+          validate: [],
+          exec: [
+            [ 'eval', script, 1, a, b ]
+          ]
+        })
+      );
+
+      assert.equal(yield q.__redis__.getAsync(a), b);
+    }));
+  });
 });
