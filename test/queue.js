@@ -541,10 +541,10 @@ describe('queue', function () {
   });
 
 
-  describe('transaction', function () {
-    // TODO: tests for validate are missing
+  describe('scripts', function () {
+    // TODO: tests for transaction validate are missing
 
-    it('should execute redis commands', bb.coroutine(function* () {
+    it('transaction should execute redis commands', bb.coroutine(function* () {
       let a = 'key:' + random(6), b = 'value:' + random(6);
 
       yield q.__redis__.evalAsync(
@@ -562,7 +562,7 @@ describe('queue', function () {
     }));
 
 
-    it('should evaluate scripts by sha', bb.coroutine(function* () {
+    it('transaction should evaluate scripts by sha', bb.coroutine(function* () {
       let a = 'key:' + random(6), b = 'value:' + random(6);
 
       let script = "redis.call('set', KEYS[1], ARGV[1])";
@@ -583,7 +583,7 @@ describe('queue', function () {
     }));
 
 
-    it('should evaluate scripts by text', bb.coroutine(function* () {
+    it('transaction should evaluate scripts by text', bb.coroutine(function* () {
       let a = 'key:' + random(6), b = 'value:' + random(6);
 
       let script = "redis.call('set', KEYS[1], ARGV[1])";

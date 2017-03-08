@@ -344,4 +344,39 @@ describe('iterator', function () {
 
     yield q.wait(yield q.t2().run());
   }));
+
+
+  describe('scripts', function () {
+    it('hvaladd should push an element to array', bb.coroutine(function* () {
+      let hash = 'hash:' + random(6), key = 'key:' + random(6), value1 = 'foo', value2 = 'bar';
+
+      yield q.__redis__.hsetAsync(hash, key, '[1,2,3]');
+
+      yield q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvaladd, 1, hash, key, value1, value2);
+
+      assert.equal(yield q.__redis__.hgetAsync(hash, key), JSON.stringify([ 1, 2, 3, value1, value2 ]));
+    }));
+
+
+    it('hvalrem should remove elements from an array', bb.coroutine(function* () {
+      let hash = 'hash:' + random(6), key = 'key:' + random(6), value1 = 'foo', value2 = 'bar';
+
+      yield q.__redis__.hsetAsync(hash, key, JSON.stringify([ 1, value1, 2, value2, 3 ]));
+
+      yield q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvalrem, 1, hash, key, value1, value2);
+
+      assert.equal(yield q.__redis__.hgetAsync(hash, key), '[1,2,3]');
+    }));
+
+
+    it('hvalrem should create empty array if all elements are removed', bb.coroutine(function* () {
+      let hash = 'hash:' + random(6), key = 'key:' + random(6), value = 'foobar';
+
+      yield q.__redis__.hsetAsync(hash, key, JSON.stringify([ value ]));
+
+      yield q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvalrem, 1, hash, key, value);
+
+      assert.equal(yield q.__redis__.hgetAsync(hash, key), '[]');
+    }));
+  });
 });

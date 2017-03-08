@@ -102,7 +102,9 @@ Fields:
 - __parent_pool__        - optional, parent `pool` value, if `parent` field exists
 - __result__             - optional, task result
 - __error__              - optional, task error
-- __children__           - optional, array of children tasks ID
+- __children__           - optional
+  - for chain and group - array of all child task IDs
+  - for iterator - array of active child task IDs (i.e. created, but not yet finished)
 - __children_finished__  - optional, number of finished children
 - __children_created__   - optional, number of created children (iterator only)
 - __user_data__          - optional, persistent data between iterator calls
