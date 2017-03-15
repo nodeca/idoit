@@ -264,6 +264,28 @@ describe('task', function () {
   });
 
 
+  it('should be able to restart itself', bb.coroutine(function* () {
+    let t1_calls = 0;
+
+    q.registerTask({
+      name: 't1',
+      retry: 3,
+      retryDelay: 10,
+      process() {
+        t1_calls++;
+        return this.restart(true);
+      }
+    });
+
+    let id = yield q.t1().run();
+
+    yield q.wait(id);
+
+    // task restarts itself twice, executed 3 times total
+    assert.equal(t1_calls, 3);
+  }));
+
+
   it('should remove old finished', bb.coroutine(function* () {
     q.registerTask({
       name: 't1',
