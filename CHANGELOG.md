@@ -1,3 +1,10 @@
+1.2.0 / 2017-03-16
+------------------
+
+- Add API method to force task restart, #2.
+- Implemented active chunks tracking for iterators.
+
+
 1.1.1 / 2017-03-03
 ------------------
 
