@@ -197,14 +197,21 @@ Postpone task execution to `delay` milliseconds (or to `task.postponeDelay`).
 Returns a Promise resolved with task id.
 
 
-### task.restart([add\_retry [, delay]])
+### task.restart([add_retry] [, delay])
 
 Restart currently running task.
 
- - **add\_retry** (Boolean) - optional, whether to increase retry count or not (default: false)
-   - if `true`, retry count is increased, and task doesn't get restarted in case it's exceeded
-   - if `false`, retry count stays the same, so a task can restart itself indefinitely
- - **delay** (Number) delay before restart in milliseconds (default: `task.retryDelay`).
+- **add_retry** (Boolean) - optional, whether to increase retry count or not
+  (default: false)
+  - if `true`, retry count is increased, and task doesn't get restarted in case
+    it's exceeded
+  - if `false`, retry count stays the same, so a task can restart itself
+    indefinitely
+- **delay** (Number) delay before restart in milliseconds
+  (default: `task.retryDelay`).
+
+Note, `idoit` already has built-in restart logic on task errors. Probably,
+you should not use this method directly. It's exposed for very specific cases.
 
 
 ### task.progressAdd(value)
