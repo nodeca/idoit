@@ -1,6 +1,6 @@
 {
   "name": "idoit",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Featured embeddable tasks queue, backed with redis.",
   "keywords": [
     "task",
