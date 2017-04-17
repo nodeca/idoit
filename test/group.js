@@ -215,8 +215,8 @@ describe('group', function () {
       baseClass: Queue.GroupTemplate,
       init() {
         assert.deepEqual(this.args, [ 'foo', 'bar' ]);
-        this.__children_to_init__ = [ q.t1() ];
         init_calls++;
+        return [ q.t1() ];
       }
     });
 
