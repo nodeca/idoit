@@ -1,3 +1,9 @@
+1.2.2 / 2017-04-17
+------------------
+
+- Simplify children init from chain/group inherited tasks.
+
+
 1.2.1 / 2017-03-29
 ------------------
 
