@@ -3,9 +3,7 @@ node_js:
   - "7"
 services:
   - redis
-addons:
-  apt:
-    packages:
-      - redis-server
+before_script: redis-cli --version
 after_success: npm run report-coveralls
 sudo: false
+dist: trusty
