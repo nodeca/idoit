@@ -3,7 +3,6 @@
 
 
 const assert   = require('assert');
-const bb       = require('bluebird');
 const inherits = require('util').inherits;
 
 const Queue    = require('../index');
@@ -13,50 +12,50 @@ const random   = require('../lib/utils').random;
 const REDIS_URL = 'redis://localhost:6379/3';
 
 
-function delay(ms) { return bb.delay(ms); }
+function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 
-const clear_namespace = bb.coroutine(function* (ns) {
+async function clear_namespace(ns) {
   const r = require('redis').createClient(REDIS_URL);
-  const keys = yield r.keysAsync(`${ns}*`);
+  const keys = await r.keysAsync(`${ns}*`);
 
-  if (keys.length) yield r.delAsync(keys);
-});
+  if (keys.length) await r.delAsync(keys);
+}
 
 
 describe('task', function () {
 
   let q, q_ns;
 
-  beforeEach(bb.coroutine(function* () {
+  beforeEach(async function () {
     q_ns = `idoit_test_${random(6)}:`;
 
     q = new Queue({ redisURL: REDIS_URL, ns: q_ns });
 
     // Helper to wait task finish
-    q.wait = bb.coroutine(function* (id) {
-      let task = yield this.getTask(id);
+    q.wait = async function (id) {
+      let task = await this.getTask(id);
 
       while (task.state !== 'finished') {
-        yield delay(50);
-        task = yield this.getTask(id);
+        await delay(50);
+        task = await this.getTask(id);
       }
 
       return task;
-    });
+    };
 
     q.on('error', err => { throw err; });
 
-    yield q.start();
-  }));
+    await q.start();
+  });
 
-  afterEach(bb.coroutine(function* () {
+  afterEach(async function () {
     q.shutdown();
-    yield clear_namespace(q_ns);
-  }));
+    await clear_namespace(q_ns);
+  });
 
 
-  it('should ignore task if same already added', bb.coroutine(function* () {
+  it('should ignore task if same already added', async function () {
     let calls = 0;
 
     q.registerTask({
@@ -67,17 +66,17 @@ describe('task', function () {
       taskID: () => 't1'
     });
 
-    yield q.t1().run();
-    yield q.t1().run();
-    let id = yield q.t1().run();
+    await q.t1().run();
+    await q.t1().run();
+    let id = await q.t1().run();
 
-    yield q.wait(id);
+    await q.wait(id);
 
     assert.equal(calls, 1);
-  }));
+  });
 
 
-  it('should start task if same already finished', bb.coroutine(function* () {
+  it('should start task if same already finished', async function () {
     let calls = 0;
 
     q.registerTask({
@@ -88,24 +87,24 @@ describe('task', function () {
       taskID: () => 't1'
     });
 
-    let id = yield q.t1().run();
+    let id = await q.t1().run();
 
     let task;
 
     do {
-      yield delay(500);
-      task = yield q.getTask(id);
+      await delay(500);
+      task = await q.getTask(id);
     } while (task.state !== 'finished');
 
-    id = yield q.t1().run();
+    id = await q.t1().run();
 
     do {
-      yield delay(500);
-      task = yield q.getTask(id);
+      await delay(500);
+      task = await q.getTask(id);
     } while (task.state !== 'finished');
 
     assert.equal(calls, 2);
-  }));
+  });
 
 
   it('should run with params', function (done) {
@@ -196,14 +195,14 @@ describe('task', function () {
 
     q.registerTask({
       name: 't1',
-      process: bb.coroutine(function* () {
+      async process() {
         calls++;
 
         if (calls === 1) {
-          yield this.setDeadline(10);
-          yield delay(1000);
+          await this.setDeadline(10);
+          await delay(1000);
         }
-      })
+      }
     });
 
     q.t1().run();
@@ -214,45 +213,45 @@ describe('task', function () {
   });
 
 
-  it('should set progress', bb.coroutine(function* () {
+  it('should set progress', async function () {
     q.registerTask({
       name: 't1',
-      process: bb.coroutine(function* () {
-        yield this.progressAdd(1);
-        yield delay(500);
-      }),
+      async process() {
+        await this.progressAdd(1);
+        await delay(500);
+      },
       init() {
         this.total = 2;
       }
     });
 
-    let id = yield q.t1().run();
+    let id = await q.t1().run();
 
-    yield delay(300);
+    await delay(300);
 
-    let task = yield q.getTask(id);
+    let task = await q.getTask(id);
 
     assert.equal(task.progress, 1);
 
-    yield delay(500);
+    await delay(500);
 
-    task = yield q.getTask(id);
+    task = await q.getTask(id);
 
     assert.equal(task.progress, 2);
-  }));
+  });
 
 
-  it('should cancel', bb.coroutine(function* () {
+  it('should cancel', async function () {
     q.registerTask('t1', () => delay(1000000));
 
-    let id = yield q.t1().run();
+    let id = await q.t1().run();
 
-    yield q.cancel(id);
+    await q.cancel(id);
 
-    let task = yield q.wait(id);
+    let task = await q.wait(id);
 
     assert.equal(task.state, 'finished');
-  }));
+  });
 
 
   it('should postpone', function (done) {
@@ -264,7 +263,7 @@ describe('task', function () {
   });
 
 
-  it('should be able to restart itself', bb.coroutine(function* () {
+  it('should be able to restart itself', async function () {
     let t1_calls = 0;
 
     q.registerTask({
@@ -277,36 +276,36 @@ describe('task', function () {
       }
     });
 
-    let id = yield q.t1().run();
+    let id = await q.t1().run();
 
-    yield q.wait(id);
+    await q.wait(id);
 
     // task restarts itself twice, executed 3 times total
     assert.equal(t1_calls, 3);
-  }));
+  });
 
 
-  it('should remove old finished', bb.coroutine(function* () {
+  it('should remove old finished', async function () {
     q.registerTask({
       name: 't1',
       process: () => {},
       removeDelay: 1000
     });
 
-    let id = yield q.t1().run();
+    let id = await q.t1().run();
 
-    yield delay(500);
+    await delay(500);
 
-    let task = yield q.getTask(id);
+    let task = await q.getTask(id);
 
     assert.notEqual(task, null);
 
-    yield delay(1500);
+    await delay(1500);
 
-    task = yield q.getTask(id);
+    task = await q.getTask(id);
 
     assert.equal(task, null);
-  }));
+  });
 
 
   it('should set custom id', function (done) {
@@ -332,7 +331,7 @@ describe('task', function () {
   });
 
 
-  it('should emit task errors', bb.coroutine(function* () {
+  it('should emit task errors', async function () {
     let errors_catched = 0;
 
     q.removeAllListeners('error');
@@ -350,15 +349,15 @@ describe('task', function () {
       retry: 0
     });
 
-    let id = yield q.t1().run();
-    let task = yield q.wait(id);
+    let id = await q.t1().run();
+    let task = await q.wait(id);
 
     assert.equal(errors_catched, 1);
     assert.ok(task.error.message.includes('<!test err!>'));
-  }));
+  });
 
 
-  it('should not emit errors from canceled tasks', bb.coroutine(function* () {
+  it('should not emit errors from canceled tasks', async function () {
     let errors_catched = 0;
 
     q.removeAllListeners('error');
@@ -376,15 +375,15 @@ describe('task', function () {
       retry: 0
     });
 
-    let id = yield q.t1().run();
-    let task = yield q.wait(id);
+    let id = await q.t1().run();
+    let task = await q.wait(id);
 
     assert.equal(errors_catched, 0);
     assert.equal(task.error.code, 'CANCELED');
-  }));
+  });
 
 
-  it('should propagate errors', bb.coroutine(function* () {
+  it('should propagate errors', async function () {
     q.removeAllListeners('error');
     // replace existing error throw with filtered one
     q.on('error', err => { if (!String(err).includes('<!test err!>')) throw err; });
@@ -397,21 +396,21 @@ describe('task', function () {
       retry: 0
     });
 
-    let id = yield q.chain([ q.chain([ q.t1() ]) ]).run();
-    let task = yield q.wait(id);
+    let id = await q.chain([ q.chain([ q.t1() ]) ]).run();
+    let task = await q.wait(id);
 
     assert.ok(task.error.message.includes('<!test err!>'));
-  }));
+  });
 
 
-  it('should pass progress to parent task', bb.coroutine(function* () {
+  it('should pass progress to parent task', async function () {
     let p1 = new Promise(resolve => {
       q.registerTask({
         name: 't1',
-        process: bb.coroutine(function* () {
-          yield this.progressAdd(1);
+        async process() {
+          await this.progressAdd(1);
           resolve();
-        }),
+        },
         init() {
           this.total = 1;
         }
@@ -421,31 +420,31 @@ describe('task', function () {
     let p2 = new Promise(resolve => {
       q.registerTask({
         name: 't2',
-        process: bb.coroutine(function* () {
-          yield this.progressAdd(1);
+        async process() {
+          await this.progressAdd(1);
           resolve();
-        }),
+        },
         init() {
           this.total = 1;
         }
       });
     });
 
-    let id = yield q.group([ q.t1(), q.t2() ]).run();
+    let id = await q.group([ q.t1(), q.t2() ]).run();
 
-    yield p1;
-    yield p2;
-    yield delay(20);
+    await p1;
+    await p2;
+    await delay(20);
 
-    let task = yield q.getTask(id);
+    let task = await q.getTask(id);
 
     assert.equal(task.progress, 2);
 
-    yield q.wait(id);
-  }));
+    await q.wait(id);
+  });
 
 
-  it('should handle invalid commands', bb.coroutine(function* () {
+  it('should handle invalid commands', async function () {
     let errored = false;
 
     q.removeAllListeners('error');
@@ -475,24 +474,24 @@ describe('task', function () {
     // unset this command for testing purposes
     IncompleteGroup.prototype.handleCommand_progress = null;
 
-    q.registerTask('t1', bb.coroutine(function* () {
-      yield this.progressAdd(1);
-    }));
+    q.registerTask('t1', async function () {
+      await this.progressAdd(1);
+    });
 
     q.registerTask({
       name: 't2',
       baseClass: IncompleteGroup
     });
 
-    let id = yield q.t2([ q.t1() ]).run();
+    let id = await q.t2([ q.t1() ]).run();
 
-    yield q.wait(id);
+    await q.wait(id);
 
     assert.ok(errored);
-  }));
+  });
 
 
-  it('should keep track of tasks if they time out', bb.coroutine(function* () {
+  it('should keep track of tasks if they time out', async function () {
     let p, p2;
 
     p = new Promise(resolve => {
@@ -512,19 +511,19 @@ describe('task', function () {
 
     assert.equal(q.__tasksTracker__, 0);
 
-    yield q.t().run();
+    await q.t().run();
 
     // wait for task to start
-    yield p;
+    await p;
     assert.equal(q.__tasksTracker__, 1);
 
     // task is timed out, not yet finished
-    yield delay(40);
+    await delay(40);
     assert.equal(q.__tasksTracker__, 0);
 
     // task resulting promise resolved, make sure
     // task tracker wasn't decremented twice
-    yield p2;
-    yield delay(1);
-  }));
+    await p2;
+    await delay(1);
+  });
 });

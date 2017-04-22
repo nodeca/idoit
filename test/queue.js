@@ -3,7 +3,7 @@
 
 
 const assert = require('assert');
-const bb     = require('bluebird');
+
 
 const Queue  = require('../index');
 const random = require('../lib/utils').random;
@@ -12,50 +12,50 @@ const random = require('../lib/utils').random;
 const REDIS_URL = 'redis://localhost:6379/3';
 
 
-function delay(ms) { return bb.delay(ms); }
+function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 
-const clear_namespace = bb.coroutine(function* (ns) {
+async function clear_namespace(ns) {
   const r = require('redis').createClient(REDIS_URL);
-  const keys = yield r.keysAsync(`${ns}*`);
+  const keys = await r.keysAsync(`${ns}*`);
 
-  if (keys.length) yield r.delAsync(keys);
-});
+  if (keys.length) await r.delAsync(keys);
+}
 
 
 describe('queue', function () {
   let q, q2, q_ns;
 
-  beforeEach(bb.coroutine(function* () {
+  beforeEach(async function () {
     q_ns = `idoit_test_${random(6)}:`;
 
     q  = new Queue({ redisURL: REDIS_URL, ns: q_ns });
     q2 = new Queue({ redisURL: REDIS_URL, ns: q_ns, pool: 'testPoolName' });
 
     // Helper to wait task finish
-    q.wait = q2.wait = bb.coroutine(function* (id) {
-      let task = yield this.getTask(id);
+    q.wait = q2.wait = async function (id) {
+      let task = await this.getTask(id);
 
       while (task.state !== 'finished') {
-        yield delay(50);
-        task = yield this.getTask(id);
+        await delay(50);
+        task = await this.getTask(id);
       }
 
       return task;
-    });
+    };
 
     q.on('error', err => { throw err; });
     q2.on('error', err => { throw err; });
 
-    yield q.start();
-    yield q2.start();
-  }));
+    await q.start();
+    await q2.start();
+  });
 
-  afterEach(bb.coroutine(function* () {
+  afterEach(async function () {
     q.shutdown();
     q2.shutdown();
-    yield clear_namespace(q_ns);
-  }));
+    await clear_namespace(q_ns);
+  });
 
 
   it('should set namespace', function () {
@@ -66,14 +66,14 @@ describe('queue', function () {
   });
 
 
-  it('should run chained groups', bb.coroutine(function* () {
+  it('should run chained groups', async function () {
     let calls = 0;
 
     q.registerTask('t1', function () {
       calls++;
     });
 
-    let id = yield q.chain([
+    let id = await q.chain([
       q.group([
         q.t1(),
         q.t1()
@@ -84,13 +84,13 @@ describe('queue', function () {
       ])
     ]).run();
 
-    yield q.wait(id);
+    await q.wait(id);
 
     assert.equal(calls, 4);
-  }));
+  });
 
 
-  it('should cancel task with big nesting', bb.coroutine(function* () {
+  it('should cancel task with big nesting', async function () {
     q.registerTask({
       name: 't1',
       process() {}
@@ -102,13 +102,13 @@ describe('queue', function () {
       task = q.chain([ task ]);
     }
 
-    let id = yield task.run();
+    let id = await task.run();
 
-    yield q.cancel(id);
-  }));
+    await q.cancel(id);
+  });
 
 
-  it('should fail to cancel child task', bb.coroutine(function* () {
+  it('should fail to cancel child task', async function () {
     q.registerTask({
       name: 't1',
       process() { return delay(2000); }
@@ -116,25 +116,25 @@ describe('queue', function () {
 
     let child_task = q.t1();
 
-    yield child_task;
+    await child_task;
 
-    yield q.group([
+    await q.group([
       child_task,
       q.t1(),
       q.t1()
     ]).run();
 
     try {
-      yield q.cancel(child_task.id);
+      await q.cancel(child_task.id);
     } catch (err) {
       if (/task with parent can not be cancelled/.test(err.message)) return;
     }
 
     throw new Error('q.cancel should fail');
-  }));
+  });
 
 
-  it('should update total from init', bb.coroutine(function* () {
+  it('should update total from init', async function () {
     q.registerTask({
       name: 't1',
       process() {},
@@ -151,18 +151,18 @@ describe('queue', function () {
       }
     });
 
-    let id = yield q.group([
+    let id = await q.group([
       q.t1(),
       q.t2()
     ]).run();
 
-    let task = yield q.getTask(id);
+    let task = await q.getTask(id);
 
     assert.equal(task.total, 17);
-  }));
+  });
 
 
-  it('should set progress tree root', bb.coroutine(function* () {
+  it('should set progress tree root', async function () {
     q.registerTask({
       name: 't1',
       process() {},
@@ -180,7 +180,7 @@ describe('queue', function () {
     });
 
 
-    let id = yield q.group([
+    let id = await q.group([
       q.chain([
         q.t1(),
         q.t1()
@@ -191,14 +191,14 @@ describe('queue', function () {
       ])
     ]).run();
 
-    let task = yield q.wait(id);
+    let task = await q.wait(id);
 
     assert.equal(task.total, 36);
     assert.equal(task.progress, 36);
-  }));
+  });
 
 
-  it('should run task in specified pool', bb.coroutine(function* () {
+  it('should run task in specified pool', async function () {
     let calls = 0;
 
     [
@@ -225,31 +225,31 @@ describe('queue', function () {
       q2.registerTask(t);
     });
 
-    let id1 = yield q.t1().run();
-    let id2 = yield q.t2().run();
+    let id1 = await q.t1().run();
+    let id2 = await q.t2().run();
 
-    yield q.wait(id1);
-    yield q.wait(id2);
+    await q.wait(id1);
+    await q.wait(id2);
 
     assert.equal(calls, 2);
-  }));
+  });
 
 
-  it('should consume tasks from multiple puuls if set', bb.coroutine(function* () {
+  it('should consume tasks from multiple puuls if set', async function () {
     q.registerTask({ name: 't1', process() {} });
     q.registerTask({ name: 't2', process() {} });
 
     q.options({ pool: [ 'default', 'secondary' ] });
 
-    let id = yield q.group([
+    let id = await q.group([
       q.t1(),
       q.t2().options({ pool: 'secondary' })
     ]).run();
 
-    let task = yield q.wait(id);
+    let task = await q.wait(id);
 
     assert.equal(task.state, 'finished');
-  }));
+  });
 
 
   it('cron should run task once per second', function (done) {
@@ -274,24 +274,24 @@ describe('queue', function () {
   });
 
 
-  it('cancel should throw if parent exists', bb.coroutine(function* () {
+  it('cancel should throw if parent exists', async function () {
     q.registerTask('t1', () => {});
 
     let children = [
       q.t1()
     ];
 
-    yield q.group(children).run();
+    await q.group(children).run();
 
     try {
-      yield q.cancel(children[0].id);
+      await q.cancel(children[0].id);
     } catch (err) {
       assert.ok(err.message.indexOf('idoit error: task with parent can not be cancelled') !== -1);
       return;
     }
 
     throw new Error('Failed to throw on invalid cancel');
-  }));
+  });
 
 
   it('should throw on missed `redisURL`', function () {
@@ -310,7 +310,7 @@ describe('queue', function () {
   });
 
 
-  it('should wait active tasks on shutdown', bb.coroutine(function* () {
+  it('should wait active tasks on shutdown', async function () {
     q.registerTask({
       name: 't',
       process() {
@@ -321,22 +321,22 @@ describe('queue', function () {
     q.t().run();
 
     while (q.__tasksTracker__ === 0) {
-      yield delay(50);
+      await delay(50);
     }
 
     let begin_ts = Date.now();
 
-    yield q.shutdown();
+    await q.shutdown();
 
     let elapsed = Date.now() - begin_ts;
 
     if (elapsed < 1500) {
       throw new Error('Failed to wait for active task on shutdown');
     }
-  }));
+  });
 
 
-  it('should limit concurrency', bb.coroutine(function* () {
+  it('should limit concurrency', async function () {
     let activeCnt = 0;
 
     q.registerTask({
@@ -356,39 +356,39 @@ describe('queue', function () {
 
     q.options({ concurrency: 1 });
 
-    let id = yield q.group([ q.t(), q.t(), q.t(), q.t() ]).run();
+    let id = await q.group([ q.t(), q.t(), q.t(), q.t() ]).run();
 
-    yield q.wait(id);
-  }));
-
-
-  it('`.cancel()` should not fail with bad task id', bb.coroutine(function* () {
-    yield q.cancel('bad_id');
-  }));
+    await q.wait(id);
+  });
 
 
-  it('`.getTask()` should return `null` on wrong queue instance', bb.coroutine(function* () {
+  it('`.cancel()` should not fail with bad task id', async function () {
+    await q.cancel('bad_id');
+  });
+
+
+  it('`.getTask()` should return `null` on wrong queue instance', async function () {
     q.registerTask('t', () => {});
 
-    let id = yield q.t().run();
-    let task = yield q2.getTask(id);
+    let id = await q.t().run();
+    let task = await q2.getTask(id);
 
     assert.strictEqual(task, null);
-  }));
+  });
 
 
-  it('`.cancel()` should ignore finished tasks', bb.coroutine(function* () {
+  it('`.cancel()` should ignore finished tasks', async function () {
     q.registerTask('t', () => delay(100));
 
     let children = [ q.t(), q.t() ];
-    let chainID = yield q.chain(children).run();
+    let chainID = await q.chain(children).run();
 
-    yield q.wait(children[0].id);
-    yield q.cancel(chainID);
+    await q.wait(children[0].id);
+    await q.cancel(chainID);
 
-    let chain = yield q.getTask(chainID);
-    let first = yield q.getTask(children[0].id);
-    let second = yield q.getTask(children[1].id);
+    let chain = await q.getTask(chainID);
+    let first = await q.getTask(children[0].id);
+    let second = await q.getTask(children[1].id);
 
     assert.equal(chain.state, 'finished');
     assert.equal(chain.error.code, 'CANCELED');
@@ -398,10 +398,10 @@ describe('queue', function () {
 
     assert.equal(second.state, 'finished');
     assert.equal(second.error.code, 'CANCELED');
-  }));
+  });
 
 
-  it('should re-emit redis errors', bb.coroutine(function* () {
+  it('should re-emit redis errors', async function () {
     q.removeAllListeners('error');
 
     let p = new Promise(resolve => {
@@ -413,8 +413,8 @@ describe('queue', function () {
 
     q.__redis__.emit('error', 'redis error');
 
-    yield p;
-  }));
+    await p;
+  });
 
 
   it('should emit "task:end" event', function (done) {
@@ -449,7 +449,7 @@ describe('queue', function () {
     let g = q.group([ i ]);
     let c = q.chain([ g ]);
 
-    bb.all([ t, i, g, c ]).then(() => {
+    Promise.all([ t, i, g, c ]).then(() => {
       q.on(`task:end:${t.id}`, data => {
         calls++;
         assert.equal(data.id, t.id);
@@ -481,14 +481,14 @@ describe('queue', function () {
   });
 
 
-  it('`.cancel()` should emit "task:end" event', bb.coroutine(function* () {
+  it('`.cancel()` should emit "task:end" event', async function () {
     q.registerTask('t1', () => delay(10000000));
     q.registerTask('t2', () => {});
 
     let t1 = q.t1();
     let t2 = q.t2();
-    let t1id = yield t1.run();
-    let t2id = yield t2.run();
+    let t1id = await t1.run();
+    let t2id = await t2.run();
 
     let t1EndCalls = 0;
     let t2EndCalls = 0;
@@ -505,17 +505,17 @@ describe('queue', function () {
       assert.equal(data.uid, t2.uid);
     });
 
-    yield q.wait(t2id);
+    await q.wait(t2id);
 
     assert.equal(t1EndCalls, 0);
     assert.equal(t2EndCalls, 1);
 
-    yield q.cancel(t1id);
-    yield q.cancel(t2id);
+    await q.cancel(t1id);
+    await q.cancel(t2id);
 
     assert.equal(t1EndCalls, 1);
     assert.equal(t2EndCalls, 1);
-  }));
+  });
 
 
   it('should emit "task:progress:<task_id>" event', function (done) {
@@ -544,10 +544,10 @@ describe('queue', function () {
   describe('scripts', function () {
     // TODO: tests for transaction validate are missing
 
-    it('transaction should execute redis commands', bb.coroutine(function* () {
+    it('transaction should execute redis commands', async function () {
       let a = 'key:' + random(6), b = 'value:' + random(6);
 
-      yield q.__redis__.evalAsync(
+      await q.__redis__.evalAsync(
         q.__scripts__.transaction,
         1,
         JSON.stringify({
@@ -558,17 +558,17 @@ describe('queue', function () {
         })
       );
 
-      assert.equal(yield q.__redis__.getAsync(a), b);
-    }));
+      assert.equal(await q.__redis__.getAsync(a), b);
+    });
 
 
-    it('transaction should evaluate scripts by sha', bb.coroutine(function* () {
+    it('transaction should evaluate scripts by sha', async function () {
       let a = 'key:' + random(6), b = 'value:' + random(6);
 
       let script = "redis.call('set', KEYS[1], ARGV[1])";
-      let sha = yield q.__redis__.scriptAsync('load', script);
+      let sha = await q.__redis__.scriptAsync('load', script);
 
-      yield q.__redis__.evalAsync(
+      await q.__redis__.evalAsync(
         q.__scripts__.transaction,
         1,
         JSON.stringify({
@@ -579,16 +579,16 @@ describe('queue', function () {
         })
       );
 
-      assert.equal(yield q.__redis__.getAsync(a), b);
-    }));
+      assert.equal(await q.__redis__.getAsync(a), b);
+    });
 
 
-    it('transaction should evaluate scripts by text', bb.coroutine(function* () {
+    it('transaction should evaluate scripts by text', async function () {
       let a = 'key:' + random(6), b = 'value:' + random(6);
 
       let script = "redis.call('set', KEYS[1], ARGV[1])";
 
-      yield q.__redis__.evalAsync(
+      await q.__redis__.evalAsync(
         q.__scripts__.transaction,
         1,
         JSON.stringify({
@@ -599,7 +599,7 @@ describe('queue', function () {
         })
       );
 
-      assert.equal(yield q.__redis__.getAsync(a), b);
-    }));
+      assert.equal(await q.__redis__.getAsync(a), b);
+    });
   });
 });
