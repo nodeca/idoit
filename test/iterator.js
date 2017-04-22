@@ -3,7 +3,7 @@
 
 
 const assert = require('assert');
-const bb     = require('bluebird');
+
 
 const Queue  = require('../index');
 const random = require('../lib/utils').random;
@@ -12,47 +12,47 @@ const random = require('../lib/utils').random;
 const REDIS_URL = 'redis://localhost:6379/3';
 
 
-function delay(ms) { return bb.delay(ms); }
+function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 
-const clear_namespace = bb.coroutine(function* (ns) {
+async function clear_namespace(ns) {
   const r = require('redis').createClient(REDIS_URL);
-  const keys = yield r.keysAsync(`${ns}*`);
+  const keys = await r.keysAsync(`${ns}*`);
 
-  if (keys.length) yield r.delAsync(keys);
-});
+  if (keys.length) await r.delAsync(keys);
+}
 
 
 describe('iterator', function () {
 
   let q, q_ns;
 
-  beforeEach(bb.coroutine(function* () {
+  beforeEach(async function () {
     q_ns = `idoit_test_${random(6)}:`;
 
     q = new Queue({ redisURL: REDIS_URL, ns: q_ns });
 
     // Helper to wait task finish
-    q.wait = bb.coroutine(function* (id) {
-      let task = yield this.getTask(id);
+    q.wait = async function (id) {
+      let task = await this.getTask(id);
 
       while (task.state !== 'finished') {
-        yield delay(50);
-        task = yield this.getTask(id);
+        await delay(50);
+        task = await this.getTask(id);
       }
 
       return task;
-    });
+    };
 
     q.on('error', err => { throw err; });
 
-    yield q.start();
-  }));
+    await q.start();
+  });
 
-  afterEach(bb.coroutine(function* () {
+  afterEach(async function () {
     q.shutdown();
-    yield clear_namespace(q_ns);
-  }));
+    await clear_namespace(q_ns);
+  });
 
 
   it('should run children tasks', function (done) {
@@ -91,12 +91,12 @@ describe('iterator', function () {
 
     q.registerTask('t1', () => {});
 
-    q.registerTask('t2', bb.coroutine(function* () {
-      let task = yield q.getTask(yield id);
+    q.registerTask('t2', async function () {
+      let task = await q.getTask(await id);
 
       assert.equal(task.progress, 1);
       done();
-    }));
+    });
 
     q.registerTask({
       name: 't3',
@@ -152,7 +152,7 @@ describe('iterator', function () {
   });
 
 
-  it('should handle subtask error', bb.coroutine(function* () {
+  it('should handle subtask error', async function () {
     q.removeAllListeners('error');
     // replace existing error throw with filtered one
     q.on('error', err => { if (!String(err).includes('<!test err!>')) throw err; });
@@ -181,12 +181,12 @@ describe('iterator', function () {
       }
     });
 
-    let id = yield q.t3().run();
-    let task = yield q.wait(id);
+    let id = await q.t3().run();
+    let task = await q.wait(id);
 
     assert.equal(t1Calls, 2);
     assert.ok(task.error.message.includes('<!test err!>'));
-  }));
+  });
 
 
   it('should throw error if `iterate` is not a function', function () {
@@ -199,7 +199,7 @@ describe('iterator', function () {
   });
 
 
-  it('should fail on bad output', bb.coroutine(function* () {
+  it('should fail on bad output', async function () {
     q.removeAllListeners('error');
     q.on('error', () => {});
 
@@ -223,14 +223,14 @@ describe('iterator', function () {
       }
     });
 
-    let id = yield q.iter().run();
-    let task = yield q.wait(id);
+    let id = await q.iter().run();
+    let task = await q.wait(id);
 
     assert.ok(task.error.message.includes('Iterator error: terminating task because bad "iterate" result'));
-  }));
+  });
 
 
-  it('should cancel', bb.coroutine(function* () {
+  it('should cancel', async function () {
     let t3Calls = 0;
     let id;
 
@@ -253,19 +253,19 @@ describe('iterator', function () {
       }
     });
 
-    id = yield q.t3().run();
+    id = await q.t3().run();
 
-    yield q.wait(id);
+    await q.wait(id);
 
     for (let t of childrenStep2) {
-      yield q.wait(t.id);
+      await q.wait(t.id);
     }
 
     assert.equal(t3Calls, 0);
-  }));
+  });
 
 
-  it('should handle error in a nested iterator', bb.coroutine(function* () {
+  it('should handle error in a nested iterator', async function () {
     q.removeAllListeners('error');
     // replace existing error throw with filtered one
     q.on('error', err => { if (!/Iterator error/.test(String(err))) throw err; });
@@ -295,14 +295,14 @@ describe('iterator', function () {
       }
     });
 
-    let id = yield q.t3().run();
-    let task = yield q.wait(id);
+    let id = await q.t3().run();
+    let task = await q.wait(id);
 
     assert.ok(task.error.message.includes('Iterator error'));
-  }));
+  });
 
 
-  it('should support idling', bb.coroutine(function* () {
+  it('should support idling', async function () {
     let iteratorCalls = 0;
 
     q.registerTask('t1', () => {});
@@ -323,11 +323,11 @@ describe('iterator', function () {
       }
     });
 
-    yield q.wait(yield q.t2().run());
-  }));
+    await q.wait(await q.t2().run());
+  });
 
 
-  it('should allow iterator to end before child tasks', bb.coroutine(function* () {
+  it('should allow iterator to end before child tasks', async function () {
     q.registerTask('t1', arg => delay(arg));
 
     q.registerTask({
@@ -342,41 +342,41 @@ describe('iterator', function () {
       }
     });
 
-    yield q.wait(yield q.t2().run());
-  }));
+    await q.wait(await q.t2().run());
+  });
 
 
   describe('scripts', function () {
-    it('hvaladd should push an element to array', bb.coroutine(function* () {
+    it('hvaladd should push an element to array', async function () {
       let hash = 'hash:' + random(6), key = 'key:' + random(6), value1 = 'foo', value2 = 'bar';
 
-      yield q.__redis__.hsetAsync(hash, key, '[1,2,3]');
+      await q.__redis__.hsetAsync(hash, key, '[1,2,3]');
 
-      yield q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvaladd, 1, hash, key, value1, value2);
+      await q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvaladd, 1, hash, key, value1, value2);
 
-      assert.equal(yield q.__redis__.hgetAsync(hash, key), JSON.stringify([ 1, 2, 3, value1, value2 ]));
-    }));
+      assert.equal(await q.__redis__.hgetAsync(hash, key), JSON.stringify([ 1, 2, 3, value1, value2 ]));
+    });
 
 
-    it('hvalrem should remove elements from an array', bb.coroutine(function* () {
+    it('hvalrem should remove elements from an array', async function () {
       let hash = 'hash:' + random(6), key = 'key:' + random(6), value1 = 'foo', value2 = 'bar';
 
-      yield q.__redis__.hsetAsync(hash, key, JSON.stringify([ 1, value1, 2, value2, 3 ]));
+      await q.__redis__.hsetAsync(hash, key, JSON.stringify([ 1, value1, 2, value2, 3 ]));
 
-      yield q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvalrem, 1, hash, key, value1, value2);
+      await q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvalrem, 1, hash, key, value1, value2);
 
-      assert.equal(yield q.__redis__.hgetAsync(hash, key), '[1,2,3]');
-    }));
+      assert.equal(await q.__redis__.hgetAsync(hash, key), '[1,2,3]');
+    });
 
 
-    it('hvalrem should create empty array if all elements are removed', bb.coroutine(function* () {
+    it('hvalrem should create empty array if all elements are removed', async function () {
       let hash = 'hash:' + random(6), key = 'key:' + random(6), value = 'foobar';
 
-      yield q.__redis__.hsetAsync(hash, key, JSON.stringify([ value ]));
+      await q.__redis__.hsetAsync(hash, key, JSON.stringify([ value ]));
 
-      yield q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvalrem, 1, hash, key, value);
+      await q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvalrem, 1, hash, key, value);
 
-      assert.equal(yield q.__redis__.hgetAsync(hash, key), '[]');
-    }));
+      assert.equal(await q.__redis__.hgetAsync(hash, key), '[]');
+    });
   });
 });

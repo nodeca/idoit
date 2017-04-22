@@ -1,11 +1,10 @@
 'use strict';
 
 
-const Promise = require('bluebird');
 const Queue   = require('../');
 
 
-Promise.coroutine(function* () {
+(async function () {
   const q = new Queue({
     redisURL: 'redis://localhost'
   });
@@ -22,12 +21,12 @@ Promise.coroutine(function* () {
   q.registerTask('mytask', val => console.log(val));
 
   // Wait until ready & start task processing.
-  yield q.start();
+  await q.start();
 
   // Put tasks to queue
-  yield q.mytask(1).run();
-  yield q.mytask(2).run();
-  yield q.mytask(3).run();
-  yield q.mytask(4).run();
-  yield q.mytask(5).run();
+  await q.mytask(1).run();
+  await q.mytask(2).run();
+  await q.mytask(3).run();
+  await q.mytask(4).run();
+  await q.mytask(5).run();
 })().catch(err => console.log(err));
