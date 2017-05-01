@@ -1,6 +1,8 @@
 idoit
 =====
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/nodeca/idoit.svg)](https://greenkeeper.io/)
+
 [![Build Status](https://img.shields.io/travis/nodeca/idoit/master.svg?style=flat)](https://travis-ci.org/nodeca/idoit)
 [![NPM version](https://img.shields.io/npm/v/idoit.svg?style=flat)](https://www.npmjs.org/package/idoit)
 [![Coverage Status](https://coveralls.io/repos/github/nodeca/idoit/badge.svg?branch=master)](https://coveralls.io/github/nodeca/idoit?branch=master)
