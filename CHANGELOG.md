@@ -1,3 +1,9 @@
+1.2.3 / 2017-07-04
+------------------
+
+- Fix Queue.cancel crash when some child tasks are already finished.
+
+
 1.2.2 / 2017-04-17
 ------------------
 
