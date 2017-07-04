@@ -1,4 +1,4 @@
-2.0.0 / WIP
+2.0.0 / 2017-07-04
 ------------------
 
 - Switch to native async/await. Now requires node v7.+ to run.
