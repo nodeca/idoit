@@ -255,14 +255,16 @@ describe('queue', function () {
   it('cron should run task once per second', function (done) {
     let t1Calls = 0;
     let startTime = Date.now();
-    let maxDrift = 100;
+
+    // first call is expected to be after 0-1100ms, second after 1000-2100ms, and so on
+    let maxDrift = 600;
 
     q.registerTask('t1', '* * * * * *', () => {
       t1Calls++;
 
       if (t1Calls <= 5) {
         let actual = Date.now() - startTime;
-        let planned = t1Calls * 1000;
+        let planned = t1Calls * 1000 - 500;
 
         assert.ok(planned - maxDrift <= actual && actual <= planned + maxDrift);
       }
