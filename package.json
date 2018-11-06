@@ -17,9 +17,9 @@
   ],
   "scripts": {
     "lint": "eslint .",
-    "test": "npm run lint && mocha",
-    "coverage": "rm -rf coverage && istanbul cover _mocha",
-    "report-coveralls": "istanbul cover _mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage"
+    "test": "npm run lint && nyc mocha",
+    "coverage": "npm run test && nyc report --reporter html",
+    "report-coveralls": "nyc report --reporter=text-lcov | coveralls"
   },
   "dependencies": {
     "bluebird": "^3.4.7",
@@ -30,8 +30,8 @@
   "devDependencies": {
     "coveralls": "^3.0.0",
     "eslint": "^5.8.0",
-    "istanbul": "^0.4.5",
-    "mocha": "^3.2.0"
+    "mocha": "^3.2.0",
+    "nyc": "^13.1.0"
   },
   "greenkeeper": {
     "ignore": [
