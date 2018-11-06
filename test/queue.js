@@ -57,7 +57,6 @@ describe('queue', function () {
     await q2.shutdown();
     clearTimeout(q.__timer__);
     clearTimeout(q2.__timer__);
-    await delay(100);
     await q.__redis__.quit();
     await q2.__redis__.quit();
     await clear_namespace(q_ns);

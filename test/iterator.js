@@ -53,7 +53,6 @@ describe('iterator', function () {
   afterEach(async function () {
     await q.shutdown();
     clearTimeout(q.__timer__);
-    await delay(100);
     await q.__redis__.quit();
     await clear_namespace(q_ns);
   });
