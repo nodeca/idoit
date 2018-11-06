@@ -20,6 +20,7 @@ async function clear_namespace(ns) {
   const keys = await r.keysAsync(`${ns}*`);
 
   if (keys.length) await r.delAsync(keys);
+  await r.quitAsync();
 }
 
 
@@ -50,7 +51,10 @@ describe('group', function () {
   });
 
   afterEach(async function () {
-    q.shutdown();
+    await q.shutdown();
+    clearTimeout(q.__timer__);
+    await delay(100);
+    await q.__redis__.quit();
     await clear_namespace(q_ns);
   });
 

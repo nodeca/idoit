@@ -20,6 +20,7 @@ async function clear_namespace(ns) {
   const keys = await r.keysAsync(`${ns}*`);
 
   if (keys.length) await r.delAsync(keys);
+  await r.quitAsync();
 }
 
 
@@ -50,7 +51,10 @@ describe('task', function () {
   });
 
   afterEach(async function () {
-    q.shutdown();
+    await q.shutdown();
+    clearTimeout(q.__timer__);
+    await delay(100);
+    await q.__redis__.quit();
     await clear_namespace(q_ns);
   });
 
@@ -169,7 +173,11 @@ describe('task', function () {
   });
 
 
-  it('should restart suspended', function (done) {
+  it('should restart suspended', function (_done) {
+    let done;
+    let wait_for_task_finish = new Promise(resolve => {
+      done = () => { resolve(); _done(); };
+    });
     let retries = 0;
 
     q.registerTask({
@@ -177,7 +185,7 @@ describe('task', function () {
       process() {
         if (retries === 0) {
           retries++;
-          return delay(1000000);
+          return wait_for_task_finish;
         }
 
         assert.equal(retries, 1);
@@ -242,7 +250,11 @@ describe('task', function () {
 
 
   it('should cancel', async function () {
-    q.registerTask('t1', () => delay(1000000));
+    let done;
+    let wait_for_task_finish = new Promise(resolve => {
+      done = resolve;
+    });
+    q.registerTask('t1', () => wait_for_task_finish);
 
     let id = await q.t1().run();
 
@@ -251,6 +263,7 @@ describe('task', function () {
     let task = await q.wait(id);
 
     assert.equal(task.state, 'finished');
+    done();
   });
 
 
