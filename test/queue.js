@@ -258,9 +258,7 @@ describe('queue', function () {
   });
 
 
-  // TODO: this test works, but it prevents node.js from exiting
-  //       because cron job is never stopped
-  it.skip('cron should run task once per second', function (done) {
+  it('cron should run task once per second', function (done) {
     let t1Calls = 0;
     let startTime = Date.now();
 
@@ -278,6 +276,7 @@ describe('queue', function () {
       }
 
       if (t1Calls === 5) {
+        for (let job of q.__crons__) job.stop();
         done();
       }
     });
