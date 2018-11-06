@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - node
 services:
-  - redis
+  - redis-server
 before_script: redis-cli --version
 after_success: npm run report-coveralls
 sudo: false
