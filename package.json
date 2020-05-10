@@ -25,7 +25,7 @@
     "bluebird": "^3.4.7",
     "cron": "^1.2.1",
     "redis": "^3.0.2",
-    "serialize-error": "^6.0.0"
+    "serialize-error": "^7.0.0"
   },
   "devDependencies": {
     "coveralls": "^3.0.0",
