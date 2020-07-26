@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "lint": "eslint .",
-    "test": "npm run lint && nyc mocha",
+    "test": "npm run lint && nyc mocha --timeout 30000",
     "coverage": "npm run test && nyc report --reporter html",
     "report-coveralls": "nyc report --reporter=text-lcov | coveralls"
   },

@@ -1,9 +1,8 @@
 language: node_js
 node_js:
+  - 10
   - node
 services:
   - redis-server
 before_script: redis-cli --version
 after_success: npm run report-coveralls
-sudo: false
-dist: trusty
