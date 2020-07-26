@@ -3,7 +3,6 @@
 
 
 const assert   = require('assert');
-const inherits = require('util').inherits;
 
 const Queue    = require('../index');
 const random   = require('../lib/utils').random;
@@ -468,21 +467,15 @@ describe('task', function () {
     });
 
     // test TaskTemplate.handleCommand, only using group as an example
-    function IncompleteGroup(...args) {
-      Queue.GroupTemplate.apply(this, args);
+    class IncompleteGroup extends Queue.GroupTemplate {
+      static extend(options) {
+        class T extends IncompleteGroup {}
+
+        Object.assign(T.prototype, options);
+
+        return T;
+      }
     }
-
-    inherits(IncompleteGroup, Queue.GroupTemplate);
-
-    IncompleteGroup.serializableFields = Queue.GroupTemplate.serializableFields;
-
-    IncompleteGroup.extend = function (options) {
-      class T extends IncompleteGroup {}
-
-      Object.assign(T.prototype, options);
-
-      return T;
-    };
 
     // unset this command for testing purposes
     IncompleteGroup.prototype.handleCommand_progress = null;
