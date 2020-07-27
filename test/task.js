@@ -467,15 +467,7 @@ describe('task', function () {
     });
 
     // test TaskTemplate.handleCommand, only using group as an example
-    class IncompleteGroup extends Queue.GroupTemplate {
-      static extend(options) {
-        class T extends IncompleteGroup {}
-
-        Object.assign(T.prototype, options);
-
-        return T;
-      }
-    }
+    class IncompleteGroup extends Queue.GroupTemplate {}
 
     // unset this command for testing purposes
     IncompleteGroup.prototype.handleCommand_progress = null;
