@@ -1,3 +1,12 @@
+3.0.0 / 2020-07-29
+------------------
+
+- Node 10.+ required.
+- Deps bump.
+- Use es6 classes where possible.
+- Make `.extend()` work in inherited classes.
+
+
 2.1.0 / 2020-03-17
 ------------------
 
