@@ -3,6 +3,7 @@
 
 
 const assert = require('assert');
+const Redis  = require('ioredis');
 
 
 const Queue  = require('../index');
@@ -16,11 +17,11 @@ function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 
 async function clear_namespace(ns) {
-  const r = require('redis').createClient(REDIS_URL);
-  const keys = await r.keysAsync(`${ns}*`);
+  const r = new Redis(REDIS_URL);
+  const keys = await r.keys(`${ns}*`);
 
-  if (keys.length) await r.delAsync(keys);
-  await r.quitAsync();
+  if (keys.length) await r.del(keys);
+  await r.quit();
 }
 
 
@@ -561,7 +562,7 @@ describe('queue', function () {
     it('transaction should execute redis commands', async function () {
       let a = 'key:' + random(6), b = 'value:' + random(6);
 
-      await q.__redis__.evalAsync(
+      await q.__redis__.eval(
         q.__scripts__.transaction,
         1,
         JSON.stringify({
@@ -572,7 +573,7 @@ describe('queue', function () {
         })
       );
 
-      assert.equal(await q.__redis__.getAsync(a), b);
+      assert.equal(await q.__redis__.get(a), b);
     });
 
 
@@ -580,9 +581,9 @@ describe('queue', function () {
       let a = 'key:' + random(6), b = 'value:' + random(6);
 
       let script = "redis.call('set', KEYS[1], ARGV[1])";
-      let sha = await q.__redis__.scriptAsync('load', script);
+      let sha = await q.__redis__.script('load', script);
 
-      await q.__redis__.evalAsync(
+      await q.__redis__.eval(
         q.__scripts__.transaction,
         1,
         JSON.stringify({
@@ -593,7 +594,7 @@ describe('queue', function () {
         })
       );
 
-      assert.equal(await q.__redis__.getAsync(a), b);
+      assert.equal(await q.__redis__.get(a), b);
     });
 
 
@@ -602,7 +603,7 @@ describe('queue', function () {
 
       let script = "redis.call('set', KEYS[1], ARGV[1])";
 
-      await q.__redis__.evalAsync(
+      await q.__redis__.eval(
         q.__scripts__.transaction,
         1,
         JSON.stringify({
@@ -613,7 +614,7 @@ describe('queue', function () {
         })
       );
 
-      assert.equal(await q.__redis__.getAsync(a), b);
+      assert.equal(await q.__redis__.get(a), b);
     });
   });
 });

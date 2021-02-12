@@ -3,6 +3,7 @@
 
 
 const assert   = require('assert');
+const Redis  = require('ioredis');
 
 const Queue    = require('../index');
 const random   = require('../lib/utils').random;
@@ -15,11 +16,11 @@ function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 
 async function clear_namespace(ns) {
-  const r = require('redis').createClient(REDIS_URL);
-  const keys = await r.keysAsync(`${ns}*`);
+  const r = new Redis(REDIS_URL);
+  const keys = await r.keys(`${ns}*`);
 
-  if (keys.length) await r.delAsync(keys);
-  await r.quitAsync();
+  if (keys.length) await r.del(keys);
+  await r.quit();
 }
 
 

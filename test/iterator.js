@@ -3,6 +3,7 @@
 
 
 const assert = require('assert');
+const Redis  = require('ioredis');
 
 
 const Queue  = require('../index');
@@ -16,11 +17,11 @@ function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 
 async function clear_namespace(ns) {
-  const r = require('redis').createClient(REDIS_URL);
-  const keys = await r.keysAsync(`${ns}*`);
+  const r = new Redis(REDIS_URL);
+  const keys = await r.keys(`${ns}*`);
 
-  if (keys.length) await r.delAsync(keys);
-  await r.quitAsync();
+  if (keys.length) await r.del(keys);
+  await r.quit();
 }
 
 
@@ -354,33 +355,33 @@ describe('iterator', function () {
     it('hvaladd should push an element to array', async function () {
       let hash = 'hash:' + random(6), key = 'key:' + random(6), value1 = 'foo', value2 = 'bar';
 
-      await q.__redis__.hsetAsync(hash, key, '[1,2,3]');
+      await q.__redis__.hset(hash, key, '[1,2,3]');
 
-      await q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvaladd, 1, hash, key, value1, value2);
+      await q.__redis__.eval(new Queue.IteratorTemplate().__scripts__.hvaladd, 1, hash, key, value1, value2);
 
-      assert.equal(await q.__redis__.hgetAsync(hash, key), JSON.stringify([ 1, 2, 3, value1, value2 ]));
+      assert.equal(await q.__redis__.hget(hash, key), JSON.stringify([ 1, 2, 3, value1, value2 ]));
     });
 
 
     it('hvalrem should remove elements from an array', async function () {
       let hash = 'hash:' + random(6), key = 'key:' + random(6), value1 = 'foo', value2 = 'bar';
 
-      await q.__redis__.hsetAsync(hash, key, JSON.stringify([ 1, value1, 2, value2, 3 ]));
+      await q.__redis__.hset(hash, key, JSON.stringify([ 1, value1, 2, value2, 3 ]));
 
-      await q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvalrem, 1, hash, key, value1, value2);
+      await q.__redis__.eval(new Queue.IteratorTemplate().__scripts__.hvalrem, 1, hash, key, value1, value2);
 
-      assert.equal(await q.__redis__.hgetAsync(hash, key), '[1,2,3]');
+      assert.equal(await q.__redis__.hget(hash, key), '[1,2,3]');
     });
 
 
     it('hvalrem should create empty array if all elements are removed', async function () {
       let hash = 'hash:' + random(6), key = 'key:' + random(6), value = 'foobar';
 
-      await q.__redis__.hsetAsync(hash, key, JSON.stringify([ value ]));
+      await q.__redis__.hset(hash, key, JSON.stringify([ value ]));
 
-      await q.__redis__.evalAsync(new Queue.IteratorTemplate().__scripts__.hvalrem, 1, hash, key, value);
+      await q.__redis__.eval(new Queue.IteratorTemplate().__scripts__.hvalrem, 1, hash, key, value);
 
-      assert.equal(await q.__redis__.hgetAsync(hash, key), '[]');
+      assert.equal(await q.__redis__.hget(hash, key), '[]');
     });
   });
 });
