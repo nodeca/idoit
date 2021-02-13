@@ -1,7 +1,7 @@
 idoit
 =====
 
-[![Build Status](https://img.shields.io/travis/nodeca/idoit/master.svg?style=flat)](https://travis-ci.org/nodeca/idoit)
+[![CI](https://github.com/nodeca/idoit/workflows/CI/badge.svg)](https://github.com/nodeca/idoit/actions)
 [![NPM version](https://img.shields.io/npm/v/idoit.svg?style=flat)](https://www.npmjs.org/package/idoit)
 [![Coverage Status](https://coveralls.io/repos/github/nodeca/idoit/badge.svg?branch=master)](https://coveralls.io/github/nodeca/idoit?branch=master)
 
