@@ -23,7 +23,7 @@
   "dependencies": {
     "cron": "^1.2.1",
     "ioredis": "^4.22.0",
-    "serialize-error": "^7.0.1"
+    "serialize-error": "^8.0.1"
   },
   "devDependencies": {
     "coveralls": "^3.0.0",
