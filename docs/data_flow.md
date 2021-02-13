@@ -28,13 +28,13 @@ by default.
 
 - __idoit:waiting__                 (set)
 - __idoit:idle__                    (set)
-- __idoit:<pool>:startable__        (set)
+- __idoit:\<pool>:startable__        (set)
 - __idoit:locked__                  (zset)
 - __idoit:restart__                 (zset)
 - __idoit:finished__                (zset)
 - __idoit:\<taskID\>__              (hash) - serialized tasks data
-- __idoit:<pool>:commands__         (zset) - internal transactions queue
-- __idoit:<pool>:commands_locked__  (zset)
+- __idoit:\<pool>:commands__         (zset) - internal transactions queue
+- __idoit:\<pool>:commands_locked__  (zset)
 
 
 ## Commands
