@@ -334,6 +334,20 @@ That works well with databases. Additional bonuses are:
   immediately.
 
 
+Dev notes
+---------
+
+Quik-run redis via docker:
+
+```sh
+# start
+docker run -d -p 6379:6379 --name redis1 redis
+# stop
+docker stop redis1
+docker rm redis1
+```
+
+
 Why one more queue?
 -------------------
 
