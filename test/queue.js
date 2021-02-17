@@ -575,46 +575,5 @@ describe('queue', function () {
 
       assert.equal(await q.__redis__.get(a), b);
     });
-
-
-    it('transaction should evaluate scripts by sha', async function () {
-      let a = 'key:' + random(6), b = 'value:' + random(6);
-
-      let script = "redis.call('set', KEYS[1], ARGV[1])";
-      let sha = await q.__redis__.script('load', script);
-
-      await q.__redis__.eval(
-        q.__scripts__.transaction,
-        1,
-        JSON.stringify({
-          validate: [],
-          exec: [
-            [ 'evalsha', sha, 1, a, b ]
-          ]
-        })
-      );
-
-      assert.equal(await q.__redis__.get(a), b);
-    });
-
-
-    it('transaction should evaluate scripts by text', async function () {
-      let a = 'key:' + random(6), b = 'value:' + random(6);
-
-      let script = "redis.call('set', KEYS[1], ARGV[1])";
-
-      await q.__redis__.eval(
-        q.__scripts__.transaction,
-        1,
-        JSON.stringify({
-          validate: [],
-          exec: [
-            [ 'eval', script, 1, a, b ]
-          ]
-        })
-      );
-
-      assert.equal(await q.__redis__.get(a), b);
-    });
   });
 });
