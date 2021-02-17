@@ -33,6 +33,8 @@ by default.
 - __idoit:restart__                 (zset)
 - __idoit:finished__                (zset)
 - __idoit:\<taskID\>__              (hash) - serialized tasks data
+- __idoit:ichunks:\<taskID\>__      (set) - list of iterator's active chunk IDs
+                                            (not yet finished)
 - __idoit:\<pool>:commands__         (zset) - internal transactions queue
 - __idoit:\<pool>:commands_locked__  (zset)
 
@@ -102,9 +104,10 @@ Fields:
 - __parent_pool__        - optional, parent `pool` value, if `parent` field exists
 - __result__             - optional, task result
 - __error__              - optional, task error
-- __children__           - optional
-  - for chain and group - array of all child task IDs
-  - for iterator - array of active child task IDs (i.e. created, but not yet finished)
-- __children_finished__  - optional, number of finished children
-- __children_created__   - optional, number of created children (iterator only)
-- __user_data__          - optional, persistent data between iterator calls
+
+Optional fields:
+
+- __children__           - array of all child task IDs (chain and group)
+- __children_finished__  - number of finished children (chain, group and iterator)
+- __children_created__   - number of created children (iterator only)
+- __user_data__          - persistent data between iterator calls (iterator only)
