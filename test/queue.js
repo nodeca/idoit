@@ -562,11 +562,9 @@ describe('queue', function () {
     it('transaction should execute redis commands', async function () {
       let a = 'key:' + random(6), b = 'value:' + random(6);
 
-      await q.__redis__.eval(
-        q.__scripts__.transaction,
-        1,
+      await q.__redis__.transaction(
         JSON.stringify({
-          validate: [],
+          if: [],
           exec: [
             [ 'set', a, b ]
           ]
