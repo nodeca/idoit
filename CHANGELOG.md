@@ -1,3 +1,12 @@
+4.0.0 / 2021-02-22
+------------------
+
+- Node.js 14.+ required.
+- Refactored iterator to avoid custom scripts use.
+- Moved transaction script to separate package.
+- Code cleanup (replace `Promise` with `async`).
+
+
 3.0.0 / 2020-07-29
 ------------------
 
