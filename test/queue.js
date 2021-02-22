@@ -351,16 +351,11 @@ describe('queue', function () {
 
     q.registerTask({
       name: 't',
-      process() {
-        return Promise.resolve()
-          .then(() => {
-            activeCnt++;
-            assert.equal(activeCnt, 1, 'Failed to limit concurrency');
-          })
-          .then(() => delay(1000))
-          .then(() => {
-            activeCnt--;
-          });
+      async process() {
+        activeCnt++;
+        assert.equal(activeCnt, 1, 'Failed to limit concurrency');
+        await delay(1000);
+        activeCnt--;
       }
     });
 
@@ -450,9 +445,9 @@ describe('queue', function () {
     let calls = 0;
     let t = q.t();
 
-    q.registerTask({ name: 'i',  baseClass: Queue.IteratorTemplate, iterate(i = 0) {
-      if (i === 0) return Promise.resolve({ state: 1, tasks: [ t ] });
-      return Promise.resolve(null);
+    q.registerTask({ name: 'i',  baseClass: Queue.IteratorTemplate, async iterate(i = 0) {
+      if (i === 0) return { state: 1, tasks: [ t ] };
+      return null;
     } });
 
     let i = q.i();

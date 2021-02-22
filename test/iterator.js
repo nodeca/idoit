@@ -70,20 +70,20 @@ describe('iterator', function () {
     q.registerTask({
       name: 't3',
       baseClass: Queue.IteratorTemplate,
-      iterate(i = 0) {
+      async iterate(i = 0) {
         if (i === 0) {
-          return Promise.resolve({
+          return {
             state: 1,
             tasks: [ q.t1() ]
-          });
+          };
         } else if (i === 1) {
-          return Promise.resolve({
+          return {
             state: 2,
             tasks: [ q.t2() ]
-          });
+          };
         }
 
-        return Promise.resolve(null);
+        return null;
       }
     });
 
@@ -106,20 +106,20 @@ describe('iterator', function () {
     q.registerTask({
       name: 't3',
       baseClass: Queue.IteratorTemplate,
-      iterate(i = 0) {
+      async iterate(i = 0) {
         if (i === 0) {
-          return Promise.resolve({
+          return {
             state: 1,
             tasks: [ q.t1() ]
-          });
+          };
         } else if (i === 1) {
-          return Promise.resolve({
+          return {
             state: 2,
             tasks: [ q.t2() ]
-          });
+          };
         }
 
-        return Promise.resolve(null);
+        return null;
       },
       init() { this.total = 2; }
     });
@@ -136,15 +136,15 @@ describe('iterator', function () {
     q.registerTask({
       name: 't3',
       baseClass: Queue.IteratorTemplate,
-      iterate(i = 0) {
+      async iterate(i = 0) {
         if (i === 0) {
-          return Promise.resolve({
+          return {
             state: 1,
             tasks: [ q.t1(), q.t1(), q.t1() ]
-          });
+          };
         }
 
-        return Promise.resolve(null);
+        return null;
       }
     });
 
@@ -213,18 +213,18 @@ describe('iterator', function () {
     q.registerTask({
       name: 'iter',
       baseClass: Queue.IteratorTemplate,
-      iterate(i = 0) {
+      async iterate(i = 0) {
         if (i === 5) {
-          return Promise.resolve({
+          return {
             state: i++,
             tasks: []
-          });
+          };
         }
 
-        return Promise.resolve({
+        return {
           state: i++,
           tasks: [ q.t1() ]
-        });
+        };
       }
     });
 
@@ -278,17 +278,17 @@ describe('iterator', function () {
     q.registerTask({
       name: 't1',
       baseClass: Queue.IteratorTemplate,
-      iterate() {
-        return Promise.resolve(null);
+      async iterate() {
+        return null;
       }
     });
 
     q.registerTask({
       name: 't2',
       baseClass: Queue.IteratorTemplate,
-      iterate(i) {
+      async iterate(i) {
         // bad iterate result: state not changed
-        return Promise.resolve({ state: i });
+        return { state: i };
       }
     });
 
@@ -315,16 +315,16 @@ describe('iterator', function () {
     q.registerTask({
       name: 't2',
       baseClass: Queue.IteratorTemplate,
-      iterate(i = 0) {
+      async iterate(i = 0) {
         if (i === 0) {
-          return Promise.resolve({ state: i + 1, tasks: [ q.t1(), q.t1(), q.t1() ] });
+          return { state: i + 1, tasks: [ q.t1(), q.t1(), q.t1() ] };
         }
 
         if (iteratorCalls++ < 2) {
-          return Promise.resolve({});
+          return {};
         }
 
-        return Promise.resolve(null);
+        return null;
       }
     });
 
@@ -338,12 +338,12 @@ describe('iterator', function () {
     q.registerTask({
       name: 't2',
       baseClass: Queue.IteratorTemplate,
-      iterate(i = 0) {
+      async iterate(i = 0) {
         if (i === 0) {
-          return Promise.resolve({ state: i + 1, tasks: [ q.t1(20), q.t1(40) ] });
+          return { state: i + 1, tasks: [ q.t1(20), q.t1(40) ] };
         }
 
-        return Promise.resolve(null);
+        return null;
       }
     });
 

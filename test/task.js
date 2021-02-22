@@ -356,8 +356,8 @@ describe('task', function () {
 
     q.registerTask({
       name: 't1',
-      process() {
-        return Promise.reject(new Error('<!test err!>'));
+      async process() {
+        throw new Error('<!test err!>');
       },
       retry: 0
     });
@@ -404,7 +404,7 @@ describe('task', function () {
     q.registerTask({
       name: 't1',
       process() {
-        return Promise.reject(new Error('<!test err!>'));
+        throw new Error('<!test err!>');
       },
       retry: 0
     });
